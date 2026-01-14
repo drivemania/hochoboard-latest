@@ -45,6 +45,7 @@ $app->post('/login', function (Request $request, Response $response) use ($baseP
     $data = $request->getParsedBody();
     $userId = trim($data['user_id'] ?? '');
     $password = $data['password'] ?? '';
+    $remember = $data['auto_login'] ?? null;
 
     $user = DB::table('users')->where('user_id', $userId)->first();
 
@@ -59,6 +60,24 @@ $app->post('/login', function (Request $request, Response $response) use ($baseP
         return $response->withHeader('Location', $basePath . '/login')->withStatus(302);
     }
 
+    if ($remember) {
+        $keyId = bin2hex(random_bytes(16));
+        $token = bin2hex(random_bytes(32));
+        
+        $expiresAt = date('Y-m-d H:i:s', time() + (86400 * 30));
+        
+        DB::table('user_autologin')->insert([
+            'key_id' => $keyId,
+            'user_id' => $user->id,
+            'token' => password_hash($token, PASSWORD_DEFAULT),
+            'last_ip' => $_SERVER['REMOTE_ADDR'],
+            'expires_at' => $expiresAt
+        ]);
+    
+        $cookieValue = $keyId . '|' . $token;
+        setcookie('AUTOLOGIN', $cookieValue, time() + (86400 * 30), '/', '', false, true);
+    }
+
     $_SESSION['user_idx'] = $user->id;
     $_SESSION['user_id']  = $user->user_id;
     $_SESSION['nickname'] = $user->nickname;
@@ -68,6 +87,13 @@ $app->post('/login', function (Request $request, Response $response) use ($baseP
 });
 
 $app->get('/logout', function (Request $request, Response $response) use ($basePath) {
+    if (isset($_COOKIE['AUTOLOGIN'])) {
+        list($keyId, $token) = explode('|', $_COOKIE['AUTOLOGIN']);
+        
+        DB::table('user_autologin')->where('key_id', $keyId)->delete();
+        
+        setcookie('AUTOLOGIN', '', time() - 3600, '/');
+    }
     session_destroy();
     return $response->withHeader('Location', $basePath . '/')->withStatus(302);
 });

@@ -58,6 +58,7 @@ CREATE TABLE `__PREFIX__documents` (
   `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `group_id` int(11) NOT NULL,
   `board_id` int(11) NOT NULL,
+  `doc_num` int(11) DEFAULT 0,
   `user_id` int(11) NOT NULL DEFAULT 0,
   `nickname` varchar(50) NOT NULL,
   `title` varchar(255) NOT NULL,
@@ -148,7 +149,7 @@ CREATE TABLE `__PREFIX__users` (
   `user_id` varchar(50) NOT NULL,
   `password` varchar(255) NOT NULL,
   `nickname` varchar(50) NOT NULL,
-  `email` varchar(100) NOT NULL,
+  `email` varchar(100) DEFAULT NULL,
   `birthdate` date DEFAULT NULL,
   `level` tinyint(3) unsigned DEFAULT 1,
   `is_deleted` tinyint(1) DEFAULT 0,
@@ -160,6 +161,7 @@ CREATE TABLE `__PREFIX__users` (
 
 CREATE TABLE `__PREFIX__plugins` (
   `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) NOT NULL,
   `directory` varchar(100) NOT NULL DEFAULT '',
   `is_active` tinyint(1) NOT NULL DEFAULT 0,
   `created_at` datetime NOT NULL,
@@ -175,3 +177,32 @@ CREATE TABLE `__PREFIX__emoticons` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `idx_code` (`code`)
 ) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE `__PREFIX__board_sequences` (
+  `board_id` INT UNSIGNED NOT NULL,
+  `last_num` INT UNSIGNED NOT NULL DEFAULT 0,
+  PRIMARY KEY (`board_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE `__PREFIX__user_autologin` (
+  `key_id` varchar(32) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `token` varchar(255) NOT NULL,
+  `last_ip` varchar(100) DEFAULT NULL,
+  `created_at` datetime DEFAULT current_timestamp(),
+  `expires_at` datetime NOT NULL,
+  PRIMARY KEY (`key_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE `__PREFIX__plugin_meta` (
+  `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  `target_type` VARCHAR(50) NOT NULL,
+  `target_id` BIGINT UNSIGNED NOT NULL,
+  `plugin_name` VARCHAR(50) NOT NULL,
+  `key_name` VARCHAR(50) NOT NULL,
+  `value` LONGTEXT,
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX `idx_target` (`target_type`, `target_id`),
+  INDEX `idx_plugin` (`plugin_name`, `key_name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

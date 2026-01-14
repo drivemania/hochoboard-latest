@@ -32,7 +32,7 @@ class AdminPluginController {
 
             if (!file_exists($jsonFile)) continue;
 
-            $info = json_decode(file_get_contents($jsonFile), true);
+            $info = $jsonFile ? json_decode(file_get_contents($jsonFile), true) : [];
             
             if (!$info) continue;
 
@@ -40,6 +40,7 @@ class AdminPluginController {
 
             $plugins[] = [
                 'directory' => $dirName,
+                'id'        => $info['id'] ?? $dirName,
                 'name'      => $info['name'] ?? $dirName,
                 'version'   => $info['version'] ?? '0.0.1',
                 'description'=> $info['description'] ?? '',
@@ -60,6 +61,7 @@ class AdminPluginController {
 
     public function toggle(Request $request, Response $response) {
         $data = $request->getParsedBody();
+        $id = $data['id'];
         $dir = $data['directory'];
 
         $plugin = DB::table('plugins')->where('directory', $dir)->first();
@@ -71,6 +73,7 @@ class AdminPluginController {
             $msg = $plugin->is_active ? '플러그인을 비활성화했습니다.' : '플러그인을 활성화했습니다.';
         } else {
             DB::table('plugins')->insert([
+                'name' => $id,
                 'directory' => $dir,
                 'is_active' => 1,
                 'created_at' => date('Y-m-d H:i:s')

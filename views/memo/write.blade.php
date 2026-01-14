@@ -2,9 +2,11 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>쪽지 쓰기</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
     <style>body { font-family: 'Pretendard', sans-serif; }</style>
 </head>
 <body class="bg-gray-50 p-4 h-screen flex flex-col">
@@ -63,7 +65,7 @@
     </form>
 
 </body>
-@if($toUser)
+@if(!$toUser)
 <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -74,7 +76,6 @@
                 direction: "asc"
             },
             placeholder: "캐릭터 이름을 입력하세요...",
-            plugins: ['clear_button'],
         });
     });
 </script>

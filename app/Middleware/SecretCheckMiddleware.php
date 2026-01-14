@@ -5,7 +5,7 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use Slim\Psr7\Response;
 use Slim\Routing\RouteContext;
-use Illuminate\Database\Capsule\Manager as DB; // ★ DB 매니저 추가
+use Illuminate\Database\Capsule\Manager as DB;
 
 class SecretCheckMiddleware
 {

@@ -5,9 +5,20 @@ use Illuminate\Database\Capsule\Manager as Capsule;
 use Illuminate\Pagination\Paginator;
 use Jenssegers\Blade\Blade;
 
+$sessionLifeTime = 86400; 
+ini_set('session.gc_maxlifetime', $sessionLifeTime); 
+ini_set('session.cookie_lifetime', $sessionLifeTime); 
+$sessionPath = __DIR__ . '/../cache/sessions';
+if (!file_exists($sessionPath)) {
+    mkdir($sessionPath, 0777, true);
+}
+ini_set('session.save_path', $sessionPath);
+
 session_start();
 
 require __DIR__ . '/../vendor/autoload.php';
+
+date_default_timezone_set('Asia/Seoul');
 
 if (!file_exists(__DIR__ . '/../.env')) {
     require __DIR__ . '/../lib/Installer/installer_routes.php';
@@ -73,6 +84,8 @@ require __DIR__ . '/../lib/VersionService.php';
 $pluginLoader = new \App\Services\PluginLoader($app);
 $pluginLoader->boot();
 
+$app->add(new \App\Middleware\AutoLoginMiddleware());
+
 require __DIR__ . '/../routes/auth.php';
 require __DIR__ . '/../routes/admin.php';
 require __DIR__ . '/../routes/web.php';
@@ -100,7 +113,7 @@ $blade->compiler()->directive('hook', function ($expression) {
     return "<?php \App\Support\Hook::trigger($expression); ?>";
 });
 
-$errorMiddleware = $app->addErrorMiddleware(true, true, true);
+$errorMiddleware = $app->addErrorMiddleware(false, true, true);
 $errorMiddleware->setErrorHandler(
     \Slim\Exception\HttpNotFoundException::class,
     function () use ($app, $blade) {

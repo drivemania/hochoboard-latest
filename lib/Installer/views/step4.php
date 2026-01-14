@@ -43,7 +43,7 @@ include __DIR__ . '/header.php';
             </div>
             <div>
                 <label class="block text-xs font-bold text-gray-600 mb-1">주소 ID (Slug)</label>
-                <input type="text" name="group_slug" value="main" pattern="[a-z0-9-]+" title="영문 소문자, 숫자, 하이픈(-)만 가능합니다." class="w-full border border-gray-300 rounded p-2 focus:outline-none focus:border-indigo-500 bg-gray-50" required>
+                <input type="text" name="group_slug" value="main" pattern="[a-z0-9\-]+" title="영문 소문자, 숫자, 하이픈(-)만 가능합니다." class="w-full border border-gray-300 rounded p-2 focus:outline-none focus:border-indigo-500 bg-gray-50" required>
                 <p class="text-xs text-gray-400 mt-1">URL에 사용됩니다. (예: /main)</p>
             </div>
         </div>

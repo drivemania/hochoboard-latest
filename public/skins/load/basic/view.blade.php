@@ -29,7 +29,6 @@ if(!empty($document->user_id)){
 
     <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
         <div>
-            <a href="{{ $currentUrl }}" class="border border-gray-200 hover:border-gray-400 px-4 py-2 rounded-md transition-colors text-sm font-bold">새로고침</a>
             <button @click="writeModal = true" type="button" class="border border-gray-200 hover:border-gray-400 px-4 py-2 rounded-md transition-colors text-sm font-bold">업로드</button>
             <button type="button" onclick="window.open('{{ $base_path }}/emoticon', 'emoticon_pop', 'width=400,height=500,scrollbars=yes,resizable=no');"
             class="border border-gray-200 hover:border-gray-400 px-4 py-2 rounded-md transition-colors text-sm font-bold">이모티콘</button>
@@ -42,9 +41,9 @@ if(!empty($document->user_id)){
 
             <div class="px-5 py-4 flex justify-between items-center border-b border-gray-50">
                 <div class="flex items-center gap-3">
-                    <h3 class="text-md font-bold text-gray-800 mb-3">#{{ $document->id }}</h3>
+                    <h3 class="text-md font-bold text-gray-800 mb-3">#{{ $document->doc_num }}</h3>
                     <div class="w-10 h-10 rounded-full bg-indigo-50 overflow-hidden text-indigo-600 flex items-center justify-center font-bold text-m border border-indigo-100">
-                        @if(!empty($document->user_id))
+                        @if(!empty($yourCharacter))
                         <img class="w-full h-full object-cover" src="{{ $yourCharacter->image_path }}">
                         @else
                         <span class="text-indigo-600 font-bold text-m">{{ mb_substr($document->nickname, 0, 1) }}</span>
@@ -52,7 +51,7 @@ if(!empty($document->user_id)){
                     </div>
                     <div>
                         <div class="font-bold text-gray-900 text-m">
-                            @if(!empty($document->user_id))
+                            @if(!empty($yourCharacter))
                             <a href="{{ $base_path }}/{{ $yourCharacter->menu_slug }}/{{ $yourCharacter->id }}" target="_blank">{{ $yourCharacter->name }}</a>
                             @endif
                             <a href="#" onclick="window.open('{{ $base_path }}/memo/write?to_id={{ $document->user_id }}', 'memo', 'width=650,height=700'); return false;">[{{ $document->nickname }}]</a>
@@ -63,7 +62,7 @@ if(!empty($document->user_id)){
 
                 @if(($_SESSION['user_idx'] ?? 0) == $document->user_id || $_SESSION['level'] === 10)
                 <div class="flex items-center gap-2 text-sm text-gray-400">
-                    <button type="button" @click="copyText('{{ $_SERVER['SERVER_NAME']  }}{{ $currentUrl }}/{{ $document->id }}')">공유</button>
+                    <button type="button" @click="copyText('{{ $_SERVER['SERVER_NAME']  }}{{ $currentUrl }}/{{ $document->num }}')">공유</button>
                     <span class="text-gray-300">|</span>
                     <form action="{{ $currentUrl }}/delete" method="POST" onsubmit="return confirm('정말 삭제하시겠습니까?');">
                         <button type="submit" class="hover:text-red-500">삭제</button>
@@ -115,6 +114,7 @@ if(!empty($document->user_id)){
                                             </span>
                                             <span class="text-xs text-gray-400">{{ date('m.d H:i', strtotime($cmt->created_at)) }}</span>
                                         </div>
+                                        {!! $cmt->plugin ?? '' !!}
                                         <p class="text-m text-gray-700 whitespace-pre-wrap leading-relaxed">{!! Helper::auto_hashtag(Helper::auto_link($cmt->content), $currentUrl) !!}</p>
                                     </div>
                                     
@@ -158,7 +158,7 @@ if(!empty($document->user_id)){
                 @if(($_SESSION['level'] ?? 0) >= $board->comment_level)
                 <form action="{{ $currentUrl }}/comment" method="POST" class="flex gap-2 items-start pt-2">
                     <div class="w-8 h-8 rounded-full overflow-hidden bg-indigo-100 flex-shrink-0 overflow-hidden">
-                        @if (isset($_SESSION['user_idx']))
+                        @if ($yourCharacter)
                             <img src="{{ $myCharacter->image_path }}" class="w-full h-full object-cover">
                         @else
                             <div class="w-full h-full flex items-center justify-center text-indigo-500 text-sm">Me</div>

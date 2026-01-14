@@ -215,6 +215,13 @@ document.addEventListener("DOMContentLoaded", function() {
             </label>
             <p class="text-xs text-gray-500 mt-1 ml-7">체크하면 글쓰기 시 CKEditor 5가 적용됩니다. (스킨에 따라 지원하지 않을 수도 있어요.)</p>
         </div>
+        <div class="mt-4 p-4 border rounded bg-gray-50">
+            <label class="flex items-center cursor-pointer">
+                <input type="checkbox" name="use_secret" value="1" class="w-5 h-5 text-blue-600 rounded" 
+                    {{ $board->use_secret ? 'checked' : '' }}>
+                <span class="ml-2 font-bold text-gray-700">🔒 비밀글 사용</span>
+            </label>
+        </div>
         @endif
     </div>
 
@@ -318,7 +325,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 <template x-for="(field, index) in fields" :key="index">
                     <div class="flex flex-wrap items-start gap-2 p-3 bg-gray-50 rounded border">
                         
-                        <div class="flex-1 min-w-[150px]">
+                        <div class="flex-1">
                             <label class="block text-xs text-gray-500 mb-1">필드 이름 (예: 연락처)</label>
                             <input type="text" :name="`custom_fields[${index}][name]`" x-model="field.name" class="w-full border rounded px-2 py-1 text-sm" placeholder="필드명" required>
                         </div>

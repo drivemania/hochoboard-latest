@@ -13,9 +13,15 @@
                 <input type="text" name="user_id" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required autofocus>
             </div>
             
-            <div class="mb-6">
+            <div class="mb-4">
                 <label class="block text-gray-700 text-sm font-bold mb-2">비밀번호</label>
                 <input type="password" name="password" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+            </div>
+            <div class="mb-6">
+                <input type="checkbox" id="auto_login" name="auto_login"/>
+                <label for="auto_login" class="text-gray-500 text-sm font-bold mb-2">
+                    자동로그인 사용
+                </label>
             </div>
             
             <button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 rounded hover:bg-blue-700 transition">

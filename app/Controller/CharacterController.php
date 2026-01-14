@@ -21,7 +21,7 @@ class CharacterController
 
     public function store(Request $request, Response $response, $args)
     {
-        $groupSlug = $args['group_slug'];
+        $groupSlug = $args['group_slug'] ?? '';
         $menuSlug = $args['menu_slug'];
 
         if($groupSlug != ""){
@@ -51,7 +51,7 @@ class CharacterController
     
         $board = DB::table('boards')->find($menu->target_id);
     
-        $jsonProfile = processCharacterData($request, $group);
+        $jsonProfile = $this->processCharacterData($request, $group);
         
         $data = $request->getParsedBody();
         $isMain = isset($data['is_main']) ? 1 : 0;
@@ -67,7 +67,7 @@ class CharacterController
         $imageInputName = array('image_path', 'image_path2');
         $image_path = $image_path2 = "";
         $uploadedFiles = $request->getUploadedFiles(); 
-        $jsonRel = json_encode($data['relationship']);
+        $jsonRel = isset($data['relationship']) ? json_encode($data['relationship']) : "";
     
         foreach ($imageInputName as $value) {
             if (isset($uploadedFiles[$value]) && $uploadedFiles[$value]->getError() === UPLOAD_ERR_OK) {
@@ -111,7 +111,7 @@ class CharacterController
     public function update(Request $request, Response $response, $args)
     {
         $charId = $args['id'];
-        $groupSlug = $args['group_slug'];
+        $groupSlug = $args['group_slug'] ?? '';
         $menuSlug = $args['menu_slug'];
         $data = $request->getParsedBody();
 
@@ -130,7 +130,7 @@ class CharacterController
             $this->returnUrl = $this->basePath . "/$menuSlug/$charId";
         }
         
-        $jsonProfile = processCharacterData($request, $group);
+        $jsonProfile = $this->processCharacterData($request, $group);
         
         $isMain = isset($data['is_main']) ? 1 : 0;
 
@@ -159,7 +159,7 @@ class CharacterController
             }
         }
 
-        $jsonRel = json_encode($data['relationship']);
+        // $jsonRel = isset($data['relationship']) ? json_encode($data['relationship']) : "";
         
         if ($isMain) {
             DB::table('characters')
@@ -174,7 +174,6 @@ class CharacterController
                 'name' => trim($data['name']),
                 'description' => trim($data['description']),
                 'profile_data' => $jsonProfile,
-                'relationship' => $jsonRel,
                 'is_main' => $isMain,
                 'image_path' => $image_path,
                 'image_path2' => $image_path2,
@@ -198,12 +197,12 @@ class CharacterController
             return $response->withHeader('Location', $_SERVER['HTTP_REFERER'] ?? $this->basePath . '/')->withStatus(302);
         } 
 
-        $currentRels = json_decode($character->relationship ?? '[]', true);
+        $currentRels = $character->relationship ? json_decode($character->relationship, true) : [];
     
         $newRel = [
             'target_id' => (int) $data['to_char_id'],
             'favor'     => (int) ($data['favor'] ?? 0),
-            'text'      => $data['relation_text']
+            'text'      => cleanHtml($data['relation_text'])
         ];
     
         $currentRels[] = $newRel;
@@ -245,7 +244,41 @@ class CharacterController
         return $response->withHeader('Location', $_SERVER['HTTP_REFERER'] ?? $this->basePath . '/')->withStatus(302);
     }
 
-    public function reorderRelation($request, $response, $args) {
+    public function updateRelation(Request $request, Response $response, $args)
+    {
+        $id = $args['id'];
+        $data = $request->getParsedBody();
+        $targetIdToUpdate = (int) $data['target_id'];
+        $relationText = $data['relation_text'];
+
+        $character = DB::table('characters')->find($id);
+
+        if ((!$character || $character->user_id != $_SESSION['user_idx']) && $_SESSION['level'] > 10) {
+            $_SESSION['flash_message'] = "권한이 없습니다.";
+            $_SESSION['flash_type'] = 'error';
+            return $response->withHeader('Location', $_SERVER['HTTP_REFERER'] ?? $this->basePath . '/')->withStatus(302);
+        } 
+
+        $currentRels = json_decode($character->relationship ?? '[]', true);
+
+        $newRels = array_map(function($rel) use ($targetIdToUpdate, $relationText) {
+            if ($rel['target_id'] == $targetIdToUpdate){
+                $rel['text'] = cleanHtml($relationText);
+            }
+            return $rel;
+        }, $currentRels);
+
+        DB::table('characters')->where('id', $id)->update([
+            'relationship' => json_encode(array_values($newRels), JSON_UNESCAPED_UNICODE)
+        ]);
+
+        $_SESSION['flash_message'] = "관계가 수정되었습니다.";
+        $_SESSION['flash_type'] = 'success';
+        return $response->withHeader('Location', $_SERVER['HTTP_REFERER'] ?? $this->basePath . '/')->withStatus(302);
+    }
+
+    public function reorderRelation($request, $response, $args)
+    {
         $id = $args['id'];
         $data = json_decode($request->getBody(), true);
         $newOrderIds = $data['order'] ?? [];
@@ -289,6 +322,59 @@ class CharacterController
     
         $response->getBody()->write(json_encode(['success' => true]));
         return $response->withHeader('Content-Type', 'application/json');
+    }
+
+    private function processCharacterData($request, $group) {
+        $data = $request->getParsedBody();
+        // $uploadedFiles = $request->getUploadedFiles(); 
+        $finalProfile = [];
+    
+        if ($group->use_fixed_char_fields) {
+            $fixedData = $data['fixed_data'] ?? [];
+            
+            foreach ($fixedData as $index => $field) {
+                $key = $field['key'];
+                $type = $field['type'];
+                $value = trim($field['value'] ?? ''); 
+                $value = cleanHtml($value);
+    
+                // 파일처리 안하기로...
+                // if ($type === 'file') {
+                //     $fileInputName = 'fixed_file_' . $index;
+                    
+                //     if (isset($uploadedFiles[$fileInputName]) && $uploadedFiles[$fileInputName]->getError() === UPLOAD_ERR_OK) {
+                //         $file = $uploadedFiles[$fileInputName];
+                        
+                //         $uploadDir = __DIR__ . '/../public/data/uploads/char';
+                //         if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
+                        
+                //         $filename = uniqid() . '_' . $file->getClientFilename();
+                //         $file->moveTo($uploadDir . '/' . $filename);
+                        
+                //         $value = '/data/uploads/char/' . $filename; 
+                //     }
+                //     else {
+                //         if (!empty($value) && !preg_match('/^https?:\/\//i', $value) && !str_starts_with($value, '/uploads/')) {
+                //              // $value = ''; 
+                //         }
+                //     }
+                // }
+    
+                $finalProfile[] = ['key' => $key, 'value' => $value, 'type' => $type];
+            }
+    
+        } else {
+            $profileData = $data['profile'] ?? [];
+            if (is_array($profileData)) {
+                foreach ($profileData as $item) {
+                    if (!empty($item['key']) && !empty($item['value'])) {
+                        $finalProfile[] = ['key' => $item['key'], 'value' => $item['value'], 'type' => 'text'];
+                    }
+                }
+            }
+        }
+    
+        return !empty($finalProfile) ? json_encode($finalProfile, JSON_UNESCAPED_UNICODE) : null;
     }
     
 }

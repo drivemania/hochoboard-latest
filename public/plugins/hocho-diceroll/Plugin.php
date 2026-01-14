@@ -1,22 +1,37 @@
 <?php
 use App\Support\Hook;
+use App\Support\PluginHelper;
 
-// 1. 댓글 저장 전 검문소 (로직 처리)
+class DiceState {
+    public static $result = null;
+}
+
 Hook::add('before_comment_save', function($data) {
     if (strpos($data['content'], '/주사위') !== false) {
         
-        $rand = rand(1, 6);
-        $rand2 = rand(1, 6);
-        $diceHtml = '
-        <div class="hc-dice-box">
-            <span class="hc-dice-icon">🎲</span>
-            <span class="hc-dice-text">주사위를 굴려 <strong>'.$rand.', '.$rand2.'</strong>이(가) 나왔습니다!</span>
-        </div>';
+        DiceState::$result = [rand(1, 6), rand(1, 6)];
 
-        $data['content'] = str_replace('/주사위', $diceHtml, $data['content']);
+        $data['content'] = str_replace('/주사위', '', $data['content']);
     }
 
     return $data;
+});
+
+Hook::add('after_comment_save', function($id) {
+
+        if (DiceState::$result !== null) {
+            list($r1, $r2) = DiceState::$result;
+
+            $diceHtml = '
+            <div class="hc-dice-box">
+                <span class="hc-dice-icon">🎲</span>
+                <span class="hc-dice-text">주사위를 굴려 <strong>'.$r1.', '.$r2.'</strong>이(가) 나왔습니다!</span>
+            </div>';
+            PluginHelper::saveCommentMeta('hocho-diceroll', $id, 'result', $diceHtml);
+            
+            DiceState::$result = null;
+        }
+
 });
 
 Hook::add('layout_head', function() {

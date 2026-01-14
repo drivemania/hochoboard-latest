@@ -61,7 +61,8 @@
     @if($group->use_fixed_char_fields)
         <div class="mb-6 bg-gray-50 p-4 rounded border">
             @php
-                $fixedFields = json_decode($group->char_fixed_fields, true) ?? [];
+                $fixedFields = $group->char_fixed_fields ? json_decode($group->char_fixed_fields, true) : [];
+                
                 $savedDataMap = [];
                 if(!empty($profile)) {
                     foreach($profile as $item) {
@@ -72,6 +73,9 @@
 
             @foreach($fixedFields as $index => $field)
                 @php 
+                    if($field['type'] == 'select'){
+                        $field['options'] = explode("," , $field['options']);
+                    }
                     $val = $savedDataMap[$field['name']] ?? ''; 
                 @endphp
                 
@@ -91,6 +95,12 @@
                     @elseif($field['type'] === 'textarea')
                         <textarea name="fixed_data[{{ $index }}][value]" class="w-full border rounded px-3 py-2 h-20 resize-none" 
                             {{ $field['required'] ? 'required' : '' }}>{{ $val }}</textarea>
+                    @elseif($field['type'] === 'select')
+                        <select name="fixed_data[{{ $index }}][value]" {{ $field['required'] ? 'required' : '' }}>
+                            @foreach( $field['options'] as $value )
+                                <option value="{{ $value }}" {{ $val == $value ? "selected" : "" }}>{{ $value }}</option>
+                            @endforeach
+                        </select>
                     @endif
                 </div>
             @endforeach
@@ -116,7 +126,7 @@
     @endif
 
         <div class="flex justify-end space-x-2 border-t pt-4">
-            <a href="javascript:history.back()" class="px-4 py-2 border rounded text-gray-600 hover:bg-gray-50">취소</a>
+            <a href="{{ $currentUrl }}/{{ $character->id }}" class="px-4 py-2 border rounded text-gray-600 hover:bg-gray-50">취소</a>
             <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded font-bold hover:bg-blue-700">
                 {{ $mode === 'edit' ? '수정완료' : '생성완료' }}
             </button>

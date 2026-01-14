@@ -27,187 +27,6 @@ function cleanHtml($html) {
     return $purifier->purify($html);
 }
 
-// [공통 함수] 게시글 DB 저장 함수
-function savePost($request, $board, $menu) {
-    $data = $request->getParsedBody();
-    
-    $title = isset($data['subject']) ? trim($data['subject']) : "";
-    $content = $data['content'];
-    $isNotice = isset($data['is_notice']) ? 1 : 0;
-    $isSecret = isset($data['is_secret']) ? 1 : 0;
-
-    $customData = [];
-    $rawCustom = $data['custom'] ?? [];
-
-    $myLevel = $_SESSION['level'] ?? 0;
-    if ($myLevel < $board->write_level) {
-        return ['success' => false, 'message' => '글 쓰기 권한이 없습니다.'];
-    }
-
-
-    if ($board->use_editor) {
-        $content = cleanHtml($content);
-    }
-
-    $definedFields = json_decode($board->custom_fields, true) ?? [];
-
-    foreach ($definedFields as $field) {
-        $fieldName = $field['name'];
-        $val = $rawCustom[$fieldName] ?? null;
-
-        if (is_array($val)) {
-            $val = implode(',', $val);
-        }
-        
-        if (!empty($field['required']) && empty($val)) {
-             return ['success' => false, 'message' => $fieldName . ' 필드는 필수입니다.'];
-        }
-
-        $customData[$fieldName] = $val;
-    }
-
-    $jsonCustomData = !empty($customData) ? json_encode($customData, JSON_UNESCAPED_UNICODE) : null;
-
-    $userId = $_SESSION['user_idx'] ?? 0;
-    $nickname = $_SESSION['nickname'] ?? '손님';
-    $ip = $_SERVER['REMOTE_ADDR'];
-
-    DB::table('documents')->insert([
-        'group_id' => $menu->group_id,
-        'board_id' => $board->id,
-        'user_id' => $userId,
-        'nickname' => $nickname,
-        'title' => $title,
-        'content' => $content,
-        'custom_data' => $jsonCustomData,
-        'is_notice' => $isNotice,
-        'is_secret' => $isSecret,
-        'hit' => 0,
-        'comment_count' => 0,
-        'ip_address' => $ip,
-        'created_at' => date('Y-m-d H:i:s')
-    ]);
-
-    return ['success' => true];
-}
-
-// [공통 함수] 로드비 DB 저장 함수
-function saveLoadPost($request, $board, $menu)  {
-    $data = $request->getParsedBody();
-    
-    $title = "로드 게시물";
-    $content = "";
-    $isSecret = isset($data['is_secret']) ? 1 : 0;
-    
-    $reply = isset($data['reply']) ? $data['reply'] : "";
-
-    $uploadedFiles = $request->getUploadedFiles();
-    $fileInputName = 'content';
-
-    if (isset($uploadedFiles[$fileInputName]) && $uploadedFiles[$fileInputName]->getError() === UPLOAD_ERR_OK) {
-        $file = $uploadedFiles[$fileInputName];
-        
-        $uploadDir = __DIR__ . '/../public/data/uploads/images';
-        if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
-        
-        $filename = uniqid() . '_' . $file->getClientFilename();
-        $file->moveTo($uploadDir . '/' . $filename);
-        
-        $content = '/public/data/uploads/images/' . $filename; 
-    }
-
-    $userId = $_SESSION['user_idx'] ?? 0;
-    $nickname = $_SESSION['nickname'] ?? '손님';
-    $ip = $_SERVER['REMOTE_ADDR'];
-
-    $replyCnt = ($reply != "" ? 1 : 0);
-
-    $docId = DB::table('documents')->insertGetId([
-        'group_id' => $menu->group_id,
-        'board_id' => $board->id,
-        'user_id' => $userId,
-        'nickname' => $nickname,
-        'title' => $title,
-        'content' => $content,
-        'custom_data' => null,
-        'is_notice' => 0,
-        'is_secret' => $isSecret,
-        'hit' => 0,
-        'comment_count' => $replyCnt,
-        'ip_address' => $ip,
-        'created_at' => date('Y-m-d H:i:s')
-    ]);
-
-    if ($reply != "") {
-        DB::table('comments')->insert([
-            'board_id' => $board->id,
-            'doc_id' => $docId,
-            'user_id' => $userId,
-            'nickname' => $nickname,
-            'content' => trim($reply),
-            'ip_address' => $ip,
-            'created_at' => date('Y-m-d H:i:s')
-        ]);
-    }
-
-    return ['success' => true];
-
-}
-
-// [공통 함수] 캐릭터 정보 저장 함수
-function processCharacterData($request, $group) {
-    $data = $request->getParsedBody();
-    // $uploadedFiles = $request->getUploadedFiles(); 
-    $finalProfile = [];
-
-    if ($group->use_fixed_char_fields) {
-        $fixedData = $data['fixed_data'] ?? [];
-        
-        foreach ($fixedData as $index => $field) {
-            $key = $field['key'];
-            $type = $field['type'];
-            $value = trim($field['value'] ?? ''); 
-
-            // 파일처리 안하기로...
-            // if ($type === 'file') {
-            //     $fileInputName = 'fixed_file_' . $index;
-                
-            //     if (isset($uploadedFiles[$fileInputName]) && $uploadedFiles[$fileInputName]->getError() === UPLOAD_ERR_OK) {
-            //         $file = $uploadedFiles[$fileInputName];
-                    
-            //         $uploadDir = __DIR__ . '/../public/data/uploads/char';
-            //         if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
-                    
-            //         $filename = uniqid() . '_' . $file->getClientFilename();
-            //         $file->moveTo($uploadDir . '/' . $filename);
-                    
-            //         $value = '/data/uploads/char/' . $filename; 
-            //     }
-            //     else {
-            //         if (!empty($value) && !preg_match('/^https?:\/\//i', $value) && !str_starts_with($value, '/uploads/')) {
-            //              // $value = ''; 
-            //         }
-            //     }
-            // }
-
-            $finalProfile[] = ['key' => $key, 'value' => $value, 'type' => $type];
-        }
-
-    } else {
-        // [B] 자유 입력 처리 (기존 동일)
-        $profileData = $data['profile'] ?? [];
-        if (is_array($profileData)) {
-            foreach ($profileData as $item) {
-                if (!empty($item['key']) && !empty($item['value'])) {
-                    $finalProfile[] = ['key' => $item['key'], 'value' => $item['value'], 'type' => 'text'];
-                }
-            }
-        }
-    }
-
-    return !empty($finalProfile) ? json_encode($finalProfile, JSON_UNESCAPED_UNICODE) : null;
-}
-
 
 $app->get('/', function (Request $request, Response $response) use ($blade, $basePath) {
     $group = DB::table('groups')->where('is_default', 1)->first();
@@ -459,10 +278,9 @@ $app->post('/comment/update', function (Request $request, Response $response) {
         $_SESSION['flash_type'] = 'error';
         return $response->withHeader('Location', $_SERVER['HTTP_REFERER'] ?? $this->basePath . '/')->withStatus(302);
     }
-    
-    $content = cleanHtml($content);
-    $content = \App\Support\Hook::filter('before_comment_save', $content);
 
+    $content = \App\Support\Hook::filter('before_comment_save', ['content' => $content]);
+    $content = cleanHtml($content['content']);
 
     DB::table('comments')
         ->where('id', $cmtId)
@@ -470,11 +288,10 @@ $app->post('/comment/update', function (Request $request, Response $response) {
             'content' => $content
         ]);
 
-    $content = \App\Support\Hook::filter('after_comment_save', $content);
+    $after =  \App\Support\Hook::filter('after_comment_save', $cmtId);
 
     return $response->withHeader('Location', $_SERVER['HTTP_REFERER'] ?? $this->basePath . '/')->withStatus(302);
 });
-
 
 // 대표 캐릭터 변경
 $app->post('/character/set-main', function (Request $request, Response $response) use ($app) {
@@ -498,6 +315,8 @@ $app->post('/character/set-main', function (Request $request, Response $response
     return $response->withHeader('Location', $_SERVER['HTTP_REFERER'] ?? $this->basePath . '/');
 });
 
+$app->any('/plugin/{plugin_name}/{action}', \App\Controller\PluginDispatcherController::class . ':dispatch');
+
 //긴주소
 $app->get('/au/{group_slug}/{menu_slug}/{id:[0-9]+}/edit', [$boardController, 'getEdit'])->add($secretCheckMiddleware);
 
@@ -507,13 +326,15 @@ $app->post('/au/{group_slug}/{menu_slug}/{id:[0-9]+}/update', [$characterControl
 
 $app->post('/au/{group_slug}/{menu_slug}/{id:[0-9]+}/relation/add', [$characterController, 'addRelation']);
 
+$app->post('/au/{group_slug}/{menu_slug}/{id:[0-9]+}/relation/update', [$characterController, 'updateRelation']);
+
 $app->post('/au/{group_slug}/{menu_slug}/{id:[0-9]+}/relation/delete', [$characterController, 'delRelation']);
 
 $app->post('/au/{group_slug}/{menu_slug}/{id:[0-9]+}/relation/reorder', [$characterController, 'reorderRelation']);
 
 $app->post('/au/{group_slug}/{menu_slug}/{doc_id:[0-9]+}/edit', [$boardController, 'edit'])->setArgument('is_short', false)->add($secretCheckMiddleware);
 
-$app->post('/au/{group_slug}/{menu_slug}/{doc_id:[0-9]+}/delete', [$boardController, 'delete'])->setArgument('is_short', false);
+$app->post('/au/{group_slug}/{menu_slug}/{doc_id:[0-9]+}/delete', [$boardController, 'bdelete'])->setArgument('is_short', false);
 
 $app->post('/au/{group_slug}/{menu_slug}/{doc_id:[0-9]+}/comment', [$boardController, 'comment'])->setArgument('is_short', false)->add($secretCheckMiddleware);
 
@@ -524,24 +345,29 @@ $app->get('/au/{group_slug}[/]', [$boardController, 'index'])->add($secretCheckM
 $app->get('/au/{group_slug}/{menu_slug}[/]', [$boardController, 'index'])->add($secretCheckMiddleware);
 
 $app->get('/au/{group_slug}/{menu_slug}/{action}[/]', [$boardController, 'index'])->add($secretCheckMiddleware);
+
 //짧은주소
-$app->get('/{menu_slug}/{id:[0-9]+}/edit', [$boardController, 'getEdit'])->add($secretCheckMiddleware);
-
-$app->post('/{menu_slug}/{id:[0-9]+}/delete', [$boardController, 'delete'])->setArgument('is_short', true);
-
-$app->post('/{menu_slug}/{id:[0-9]+}/comment', [$boardController, 'comment'])->setArgument('is_short', false)->add($secretCheckMiddleware);
+$app->post('/{menu_slug}/write', [$boardController, 'write']);
 
 $app->post('/{menu_slug}/store', [$characterController, 'store'])->add($secretCheckMiddleware);
+
+$app->get('/{menu_slug}/{id:[0-9]+}/edit', [$boardController, 'getEdit'])->add($secretCheckMiddleware);
+
+$app->post('/{menu_slug}/{id:[0-9]+}/edit', [$boardController, 'edit'])->setArgument('is_short', true);
+
+$app->post('/{menu_slug}/{id:[0-9]+}/delete', [$boardController, 'bdelete'])->setArgument('is_short', true);
+
+$app->post('/{menu_slug}/{id:[0-9]+}/comment', [$boardController, 'comment'])->setArgument('is_short', false)->add($secretCheckMiddleware);
 
 $app->post('/{menu_slug}/{id:[0-9]+}/update', [$characterController, 'update']);
 
 $app->post('/{menu_slug}/{id:[0-9]+}/relation/add', [$characterController, 'addRelation']);
 
+$app->post('/{menu_slug}/{id:[0-9]+}/relation/update', [$characterController, 'updateRelation']);
+
 $app->post('/{menu_slug}/{id:[0-9]+}/relation/delete', [$characterController, 'delRelation']);
 
 $app->post('/{menu_slug}/{id:[0-9]+}/relation/reorder', [$characterController, 'reorderRelation']);
-
-$app->post('/{menu_slug}/write', [$boardController, 'write']);
 
 $app->get('/{menu_slug}[/]', [$boardController, 'index'])->add($secretCheckMiddleware);
 

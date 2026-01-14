@@ -102,7 +102,6 @@ class Widget {
                 $html .= '<a href="' . $basePath . '/admin" class="hc-login-btn-admin" target="_blank">관리자</a>';
             }
             $html .= '<a href="' . $basePath . '/logout" class="hc-login-btn-logout">로그아웃</a>';
-            $html .= '<a href="' . $basePath . '/info" class="hc-login-btn-info">내 정보</a>';
             $html .= '</div>';
 
         } else {
@@ -111,6 +110,10 @@ class Widget {
             $html .= '<input type="text" name="user_id" placeholder="아이디" class="hc-login-input-id">';
             $html .= '<input type="password" name="password" placeholder="비밀번호" class="hc-login-input-pw">';
             $html .= '</div>';
+            $html .= '<div class="hc-login-auto-login">';
+            $html .= '<input type="checkbox" id="auto_login" name="auto_login">';
+            $html .= '<label for="auto_login">자동 로그인</label>';
+            $html .= '</div>';
             
             $html .= '<div class="hc-login-btn-wrap">';
             $html .= '<button type="submit" class="hc-login-btn-submit">로그인</button>';
@@ -118,7 +121,6 @@ class Widget {
             
             $html .= '<div class="hc-login-links">';
             $html .= '<a href="' . $basePath . '/register" class="hc-login-link-register">회원가입</a>';
-            $html .= '<a href="#" class="hc-login-link-find">비밀번호 찾기</a>';
             $html .= '</div>';
             $html .= '</form>';
         }
@@ -148,6 +150,7 @@ class Widget {
                 'documents.created_at',
                 'menus.slug as menu_slug',
                 'documents.id as doc_id',
+                'documents.doc_num as doc_num',
                 'menus.type as menu_type',
                 DB::raw("NULL as comment_id"),
                 DB::raw("'doc' as type")
@@ -167,11 +170,13 @@ class Widget {
             ->where('comments.is_deleted', 0)
             ->where('menus.is_deleted', 0)
             ->where('documents.is_secret', 0)
+            ->where('documents.is_deleted', 0)
             ->select(
                 'comments.content as subject',
                 'comments.created_at',
                 'menus.slug as menu_slug',
                 'documents.id as doc_id',
+                'documents.doc_num as doc_num',
                 'menus.type as menu_type',
                 'comments.id as comment_id',
                 DB::raw("'cmt' as type")
@@ -200,7 +205,11 @@ class Widget {
                     $subject = mb_substr($subject, 0, $cutSubject) . '...';
                 }
 
-                $url = $basePath . '/' . $item->menu_slug . '/' . $item->doc_id;
+                if(mb_strlen($subject) <= 0){
+                    $subject = '...';
+                }
+
+                $url = $basePath . '/' . $item->menu_slug . '/' . $item->doc_num;
                 if ($item->type === 'cmt') {
                     $url .= '#comment_' . $item->comment_id;
                 }

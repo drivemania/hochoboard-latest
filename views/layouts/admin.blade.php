@@ -50,10 +50,24 @@
         @endphp
     @endif
 
-    <div class="flex h-screen overflow-hidden">
-        <aside class="w-64 bg-gray-800 text-white flex flex-col">
-            <div class="p-6 text-xl font-bold border-b border-gray-700">
+    <div x-data="{ sidebarOpen: false }" class="flex h-screen overflow-hidden">
+        <div x-show="sidebarOpen" 
+             @click="sidebarOpen = false" 
+             x-transition:enter="transition-opacity ease-linear duration-300"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition-opacity ease-linear duration-300"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
+             class="fixed inset-0 z-20 bg-black bg-opacity-50 md:hidden">
+        </div>
+        <aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
+        class="fixed inset-y-0 left-0 z-30 w-64 bg-gray-800 text-white flex flex-col transition-transform duration-300 transform md:translate-x-0 md:static md:inset-0">
+            <div class="flex justify-between p-6 text-xl font-bold border-b border-gray-700">
                 <a href="{{ $base_path }}/admin">호쵸보드 설정</a>
+                <button @click="sidebarOpen = false" class="md:hidden text-gray-400 hover:text-white">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
             </div>
             
             <nav class="flex-1 overflow-y-auto py-4">
@@ -120,9 +134,20 @@
 
         <div class="flex-1 flex flex-col overflow-hidden">
             <header class="bg-white shadow-sm p-4 flex justify-between items-center z-10">
-                <h2 class="text-lg font-semibold text-gray-700">@yield('header', '대시보드')</h2>
+                <div class="flex items-center">
+                    <button @click="sidebarOpen = true" class="text-gray-500 focus:outline-none md:hidden mr-4">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                        </svg>
+                    </button>
+                    
+                    <h2 class="text-lg font-semibold text-gray-700">@yield('header', '대시보드')</h2>
+                </div>
+
                 <div class="text-sm text-gray-600">
-                    접속자: <strong>{{ $_SESSION['nickname'] }}</strong> (최고관리자)
+                    <span class="hidden sm:inline">접속자:</span> 
+                    <strong>{{ $_SESSION['nickname'] }}</strong>
+                    <span class="hidden sm:inline">(최고관리자)</span>
                 </div>
             </header>
 

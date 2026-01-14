@@ -7,8 +7,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="{{ !empty($group->description) ? $group->description : "" }}">
     <title>@yield('title', $name)</title>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
+    @if(!empty($group->favicon))
+    <link rel="icon" href="{{ $base_path }}/public{{ $group->favicon }}">
+    @endif
     <style>
         body { font-family: 'Pretendard', sans-serif; }
         [x-cloak] { display: none !important; }

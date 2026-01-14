@@ -84,26 +84,40 @@ class InstallerController {
 
         return renderInstallView($response, 'step4');
     }
+
+    private function debug_log($msg) {
+        // public 폴더에 로그 파일 생성 (브라우저로 확인 가능)
+        file_put_contents(__DIR__ . '/../../public/install_debug.txt', date('H:i:s') . " - " . $msg . "\n", FILE_APPEND);
+    }
     public function runInstall($request, $response) {
+        $this->debug_log("1");
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
 
+        set_time_limit(0);
+        ini_set('memory_limit', '512M');
+
         $adminData = $request->getParsedBody();
+
+        $this->debug_log("2");
 
         $dbData = $_SESSION['install_data'] ?? null;
 
         if (!$dbData) {
             return renderInstallView($response, 'step4', ['error' => '세션이 만료되었습니다. 처음부터 다시 시도해주세요.']);
         }
-
+        $this->debug_log("2-1");
         $data = array_merge($dbData, $adminData);
         $prefix = $data['db_prefix'] ?? 'hc_';
 
         try {
-            $dsn = "mysql:host={$data['db_host']};dbname={$data['db_name']};charset=utf8mb4";
+            $this->debug_log("2-2");
+            $dsn = "mysql:host={$data['db_host']};port={$data['db_port']};dbname={$data['db_name']};charset=utf8mb4";
             $pdo = new PDO($dsn, $data['db_user'], $data['db_pass']);
             $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+            $this->debug_log("3");
 
             $sqlFile = __DIR__ . '/../../database/schema.sql';
             if (file_exists($sqlFile)) {
@@ -112,9 +126,13 @@ class InstallerController {
                 $pdo->exec($finalSql);
             }
 
+            $this->debug_log("4");
+
             $stmt = $pdo->prepare("INSERT INTO {$prefix}users (user_id, password, nickname, level, created_at) VALUES (?, ?, ?, ?, NOW())");
             $hashedPw = password_hash($data['admin_pw'], PASSWORD_DEFAULT);
             $stmt->execute([$data['admin_id'], $hashedPw, '관리자', 10]);
+
+            $this->debug_log("5");
 
             $stmtGroup = $pdo->prepare("INSERT INTO {$prefix}groups (slug, name, is_default, created_at) VALUES (?, ?, 1, NOW())");
             $stmtGroup->execute([
@@ -122,7 +140,11 @@ class InstallerController {
                 $adminData['group_name']
             ]);
 
+            $this->debug_log("6");
+
             $this->createEnvFile($data);
+
+            $this->debug_log("7");
 
             unset($_SESSION['install_data']); 
             

@@ -3,9 +3,10 @@ namespace App\Controller;
 
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Capsule\Manager as DB;
 
-class BoardController
+class BoardController extends Model
 {
     protected $blade;
     protected $basePath;
@@ -82,7 +83,7 @@ class BoardController
             return $response;
         }
         
-        if (in_array($menuSlug, ['admin', 'login', 'logout', 'register', 'au', 'comment', 'memo'])) {
+        if (in_array($menuSlug, ['admin', 'login', 'logout', 'register', 'au', 'comment', 'page', 'memo', 'plugin'])) {
             $_SESSION['flash_message'] = "페이지를 찾을 수 없습니다.";
             $_SESSION['flash_type'] = 'error';
             return $response->withHeader('Location', $this->basePath . '/')->withStatus(302);
@@ -157,14 +158,22 @@ class BoardController
                 
                 //상세보기
                 if (is_numeric($action)) {
-                    $docId = $action;
+                    $docNum = $action;
                     
-                    $document = DB::table('documents')->find($docId);
+                    $document = DB::table('documents')->where('board_id', $board->id)->where('doc_num', $docNum)->first();
                     if (!$document || $document->is_deleted == 1) {
                         $_SESSION['flash_message'] = "페이지를 찾을 수 없습니다.";
                         $_SESSION['flash_type'] = 'error';
                         return $response->withHeader('Location', $this->basePath . '/')->withStatus(302);
                     }
+
+                    if ($document->is_secret > 0 && $document->user_id != $_SESSION['user_idx'] && $_SESSION['user_idx'] < 10) {
+                        $_SESSION['flash_message'] = "권한이 없습니다.";
+                        $_SESSION['flash_type'] = 'error';
+                        return $response->withHeader('Location', $this->basePath . '/')->withStatus(302);
+                    }
+
+                    $docId = $document->id;
         
                     DB::table('documents')->where('id', $docId)->increment('hit');
         
@@ -173,7 +182,13 @@ class BoardController
                         ->where('is_deleted', 0)
                         ->orderBy('id', 'asc')
                         ->get();
-        
+
+                    if(!empty($comments)){
+                        foreach($comments as $cmt){
+                            $cmt->plugin = $this->getPluginId('comment', $cmt->id);
+                        }
+                    }
+
                     $skinView = 'board.' . ($board->board_skin ?? 'basic') . '.view';
                     $listUrl = $currentUrl; // 목록 주소
         
@@ -204,7 +219,7 @@ class BoardController
                         'menu'        => $menu,
                         'document'    => $document,
                         'comments'    => $comments,
-                        'currentUrl'  => $currentUrl . '/' . $docId, // 현재 글 주소
+                        'currentUrl'  => $currentUrl . '/' . $docNum, // 현재 글 주소
                         'listUrl'     => $listUrl
                     ]);
                     $response->getBody()->write($content);
@@ -284,6 +299,7 @@ class BoardController
         
                 $skinView = 'board.' . ($board->board_skin ?? 'basic') . '.list';
         
+                $emoticon = DB::table('emoticons')->get();
                 foreach ($documents as $doc) {
                     $doc->comments = DB::table('comments')
                         ->leftJoin('characters', function($join) use ($group) {
@@ -309,6 +325,13 @@ class BoardController
                             'char_menu.slug as char_menu_slug'
                         ])
                         ->get();
+
+                    foreach ($emoticon as $emo) {
+                        $imgTag = '<img src="'.$this->basePath . $emo->image_path . '" alt="'.$emo->code.'" class="hc-emoticon" style="display:inline-block; vertical-align:middle;">';
+                        foreach ($doc->comments as $cmt) {
+                            $cmt->content = str_replace($emo->code, $imgTag, $cmt->content);
+                        }
+                    }
                 }
 
                 $parser = new \ContentParser($this->basePath); 
@@ -418,7 +441,7 @@ class BoardController
                         ->get();
                     
                     $owner = DB::table('users')->find($character->user_id);
-        
+                    
                     $content = $this->blade->render($skinViewPath . '.view', [
                         'themeLayout' => $themeLayout,
                         'themeUrl' => $themeUrl,
@@ -427,7 +450,7 @@ class BoardController
                         'group' => $group,
                         'character' => $character,
                         'owner' => $owner ? $owner->nickname : '알수없음',
-                        'profile' => json_decode($character->profile_data, true) ?? [],
+                        'profile' => $character->profile_data ? json_decode($character->profile_data, associative: true) : [],
                         'relations' => $finalRelations,
                         'otherCharacters' => $otherCharacters,
                         'currentUrl' => $currentUrl
@@ -479,7 +502,8 @@ class BoardController
                     $docId = $action;
                     
                     $document = DB::table('documents')
-                    ->where('documents.id', $docId)
+                    ->where('documents.board_id', $board->id)
+                    ->where('documents.doc_num', $docId)
                     ->where('documents.is_deleted', 0)
                     ->leftJoin('characters', function($join) use ($group) {
                         $join->on('documents.user_id', '=', 'characters.user_id')
@@ -508,10 +532,10 @@ class BoardController
                         return $response->withHeader('Location', $this->basePath . '/')->withStatus(302);
                     }
         
-                    DB::table('documents')->where('id', $docId)->increment('hit');
+                    DB::table('documents')->where('doc_num', $docId)->increment('hit');
 
                     $comments = DB::table('comments')
-                        ->where('comments.doc_id', $docId)
+                        ->where('comments.doc_id', $document->id)
                         ->where('comments.is_deleted', 0)
                         ->leftJoin('characters', function($join) use ($group) {
                             $join->on('comments.user_id', '=', 'characters.user_id')
@@ -532,6 +556,12 @@ class BoardController
                             'char_menu.slug as char_menu_slug',
                         ])
                         ->get();
+
+                    if(!empty($comments)){
+                        foreach($comments as $cmt){
+                            $cmt->plugin = $this->getPluginId('comment', $cmt->id);
+                        }
+                    }
         
                     $skinView = 'load.' . ($board->board_skin ?? 'basic') . '.view';
                     $listUrl = $currentUrl; // 목록 주소
@@ -598,11 +628,12 @@ class BoardController
                             $query->where('documents.nickname', 'like', "%{$keyword}%");
                             break;
                         case "anchor":
-                            $query->where('documents.id', '<=', $keyword);
+                            $query->where('documents.doc_num', '<=', $keyword);
                             break;
                         case "hashtag":
+                            $keyword = ltrim($keyword, '#');
                             $hashCmtArr = DB::table('comments')
-                                ->where('content', 'like', "%{$keyword}%")
+                                ->where('content', 'like', "%#{$keyword}%")
                                 ->where('is_deleted', '=', 0)
                                 ->pluck('doc_id')
                                 ->toArray();
@@ -662,6 +693,10 @@ class BoardController
                         foreach ($doc->comments as $cmt) {
                             $cmt->content = str_replace($emo->code, $imgTag, $cmt->content);
                         }
+                    }
+
+                    foreach($doc->comments as $cmt){
+                        $cmt->plugin = $this->getPluginId('comment', $cmt->id);
                     }
                 }
 
@@ -760,9 +795,9 @@ class BoardController
             };
 
         if( $board->type == "load" ) {
-            $result = saveLoadPost($request, $board, $menu);
+            $result = $this->saveLoadPost($request, $board, $menu);
         }else{
-            $result = savePost($request, $board, $menu);
+            $result = $this->savePost($request, $board, $menu);
         }
 
 
@@ -775,9 +810,9 @@ class BoardController
         return $response->withHeader('Location', $this->basePath . $this->returnUrl)->withStatus(302);
     }
 
-    public function delete(Request $request, Response $response, $args) 
+    public function bdelete(Request $request, Response $response, $args) 
     {
-        $docId = $args['id'];
+        $docNum = $args['id'];
         $slug = $args['menu_slug'];
         $isShort = $args['is_short'] ?? false;
 
@@ -790,11 +825,12 @@ class BoardController
 
 
         $boardType = $slugChk->type;
+        $boardId = $slugChk->target_id;
 
         switch($boardType){
             case 'load':
             case 'board':{
-                $check = DB::table(table: 'documents')->where('id',  $docId)->first();
+                $check = DB::table(table: 'documents')->where('board_id', $boardId)->where('doc_num',  $docNum)->first();
                 if (!$check) {
                     $_SESSION['flash_message'] = '처리중 오류가 발생했습니다.';
                     $_SESSION['flash_type'] = 'error';
@@ -810,7 +846,8 @@ class BoardController
                 }
             
                 DB::table('documents')
-                ->where('id', $docId)
+                ->where('doc_num', $docNum)
+                ->where('board_id', $boardId)
                 ->update([
                     'is_deleted' => 1,
                     'deleted_at' => date('Y-m-d H:i:s')
@@ -818,7 +855,7 @@ class BoardController
                 break;
             }
             case 'character':{
-                $check = DB::table(table: 'characters')->where('id',  $docId)->first();
+                $check = DB::table(table: 'characters')->where('id',  $docNum)->first();
                 if (!$check) {
                     $_SESSION['flash_message'] = '처리중 오류가 발생했습니다.';
                     $_SESSION['flash_type'] = 'error';
@@ -834,7 +871,7 @@ class BoardController
                 }
             
                 DB::table('characters')
-                ->where('id', $docId)
+                ->where('id', $docNum)
                 ->update([
                     'is_deleted' => 1,
                     'deleted_at' => date('Y-m-d H:i:s')
@@ -854,12 +891,15 @@ class BoardController
 
     public function comment(Request $request, Response $response, $args) 
     {
-        $docId = $args['id'];
+        $docNum = $args['id'];
         $isShort = $args['is_short'] ?? false;
+        $menuSlug = $args['menu_slug'];
         $data = $request->getParsedBody();
         
-        $doc = DB::table('documents')->find($docId);
+        $menu = DB::table('menus')->where('slug', $menuSlug)->where('is_deleted', 0)->first();
+        $doc = DB::table('documents')->where('board_id', $menu->target_id)->where('doc_num', $docNum)->first();
         $board = DB::table('boards')->where('id', $doc->board_id)->where('is_deleted', 0)->first();
+        $docId = $doc->id;
 
         if (($_SESSION['level'] ?? 0) < $board->comment_level) {
             $_SESSION['flash_message'] = '댓글 권한이 없습니다.';
@@ -869,7 +909,7 @@ class BoardController
 
         $data = \App\Support\Hook::filter('before_comment_save', $data);
     
-        DB::table('comments')->insert([
+        $cmtId = DB::table('comments')->insertGetId([
             'board_id' => $doc->board_id,
             'doc_id' => $docId,
             'user_id' => $_SESSION['user_idx'] ?? 0,
@@ -878,6 +918,8 @@ class BoardController
             'ip_address' => $_SERVER['REMOTE_ADDR'],
             'created_at' => date('Y-m-d H:i:s')
         ]);
+
+        $after = \App\Support\Hook::filter('after_comment_save', $cmtId);
 
         if($isShort){
             $this->returnUrl = $_SERVER['HTTP_REFERER'] ?? $this->basePath . '/';
@@ -892,11 +934,20 @@ class BoardController
 
     public function edit(Request $request, Response $response, $args) 
     {
-        $docId = $args['id'];
+        $docNum = $args['id'];
         $isShort = $args['is_short'] ?? false;
         $data = $request->getParsedBody();
 
-        $check = DB::table('documents')->where('id', $docId)->first();
+        if(!$isShort){
+            $group = DB::table('groups')->where('slug', $args['group_slug'])->first();
+        }else{
+            $group = DB::table('groups')->where('is_default', 1)->first();
+        }
+
+        $menu = DB::table('menus')->where('group_id', $group->id)->where('slug', $args['menu_slug'])->first();
+        $board = DB::table('boards')->find($menu->target_id);
+
+        $check = DB::table('documents')->where('board_id', $board->id)->where('doc_num', $docNum)->first();
         if (!$check) return $response; // 에러처리 생략
         
         if($check->user_id !== ($_SESSION['user_idx'] ?? 0) && ($_SESSION['level'] ?? 0) != 10) {
@@ -905,13 +956,9 @@ class BoardController
             return $response->withHeader('Location', $_SERVER['HTTP_REFERER'] ?? $this->basePath . '/')->withStatus(302);
         }
 
-        $group = DB::table('groups')->where('slug', $args['group_slug'])->first();
-        $menu = DB::table('menus')->where('group_id', $group->id)->where('slug', $args['menu_slug'])->first();
-        $board = DB::table('boards')->find($menu->target_id);
-
         $customData = [];
         $rawCustom = $data['custom'] ?? [];
-        $definedFields = json_decode($board->custom_fields, true) ?? [];
+        $definedFields = $board->custom_fields ? json_decode($board->custom_fields, true) : [];
         foreach ($definedFields as $field) {
             $fieldName = $field['name'];
             $val = $rawCustom[$fieldName] ?? null;
@@ -921,24 +968,25 @@ class BoardController
         $jsonCustomData = !empty($customData) ? json_encode($customData, JSON_UNESCAPED_UNICODE) : null;
 
         $content = trim($data['content']);
-        if ($board->use_editor) {
-            $content = cleanHtml($content);
-        }
+        $content = cleanHtml($content);
 
         if($isShort){
-            $this->returnUrl = $this->basePath . '/' . $args['menu_slug'] . '/' . $docId;
+            $this->returnUrl = $this->basePath . '/' . $args['menu_slug'] . '/' . $docNum;
         }else{
-            $this->returnUrl = $this->basePath . '/au/' . $args['group_slug'] . '/' . $args['menu_slug'] . '/' . $docId;
+            $this->returnUrl = $this->basePath . '/au/' . $args['group_slug'] . '/' . $args['menu_slug'] . '/' . $docNum;
         }
 
-        DB::table('documents')->where('id', $docId)->update([
-            'title' => trim($data['subject']),
-            'content' => $content,
-            'custom_data' => $jsonCustomData,
-            'is_notice' => isset($data['is_notice']) ? 1 : 0,
-            'is_secret' => isset($data['is_secret']) ? 1 : 0,
-            'updated_at' => date('Y-m-d H:i:s')
-        ]);
+        DB::table('documents')
+            ->where('doc_num', $docNum)
+            ->where('board_id', $board->id)
+            ->update([
+                'title' => trim($data['subject']),
+                'content' => $content,
+                'custom_data' => $jsonCustomData,
+                'is_notice' => isset($data['is_notice']) ? 1 : 0,
+                'is_secret' => isset($data['is_secret']) ? 1 : 0,
+                'updated_at' => date('Y-m-d H:i:s')
+            ]);
 
         return $response->withHeader('Location', $this->returnUrl)->withStatus(302);
     }
@@ -954,7 +1002,7 @@ class BoardController
             $mainUrl = $this->basePath . '/au/' . $groupSlug;
         }else{
             $group = DB::table('groups')->where('is_default', 1)->first();
-            $mainUrl = $this->basePath . '/';
+            $mainUrl = $this->basePath;
         }
 
         if (!$group) {
@@ -978,7 +1026,9 @@ class BoardController
 
         if ($menu->type === 'board') {
             $board = DB::table('boards')->find($menu->target_id);
-            $document = DB::table('documents')->find($id);
+            $document = DB::table('documents')
+            ->where('board_id', $board->id)
+            ->where('doc_num', $id) ->first();
 
             $myId = $_SESSION['user_idx'] ?? null;
             $myLevel = $_SESSION['level'] ?? 0;
@@ -1025,14 +1075,21 @@ class BoardController
                 return $response->withHeader('Location', $_SERVER['HTTP_REFERER'] ?? $this->basePath . '/')->withStatus(302);
             }
 
+            if(!empty($char) && $char->user_id != $_SESSION['user_idx']){
+                $_SESSION['flash_message'] = "수정 권한이 없습니다.";
+                $_SESSION['flash_type'] = 'error';
+                return $response->withHeader('Location', $_SERVER['HTTP_REFERER'] ?? $this->basePath . '/')->withStatus(302);
+            }
+
             $skinName = $board->board_skin ?? 'basic';
             $skinViewPath = 'character.' . $skinName;
 
             $themeLayout = ($group->theme ?? 'basic') . ".layout";
-            $currentUrl = $this->basePath . "/au/$groupSlug/$menuSlug";
+            $currentUrl = $mainUrl . "/$menuSlug";
             $skinUrl = (object) array(
                 'documents' => $this->basePath . '/public/skins/board/' . $board->board_skin
             );
+
 
             $content = $this->blade->render( $skinViewPath . '.write', [
                 'themeLayout' => $themeLayout,
@@ -1042,7 +1099,7 @@ class BoardController
                 'group' => $group,
                 'mode' => 'edit',
                 'character' => $char,
-                'profile' => json_decode($char->profile_data, true) ?? [],
+                'profile' => $char->profile_data ? json_decode($char->profile_data, true) : [],
                 'actionUrl' => $currentUrl . '/' . $id . '/update',
                 'currentUrl' => $currentUrl
             ]);
@@ -1056,4 +1113,182 @@ class BoardController
             return $response->withHeader('Location', $this->basePath . '/')->withStatus(302);
         };
     }
+
+    private function savePost($request, $board, $menu) 
+    {
+        $data = $request->getParsedBody();
+        DB::connection()->transaction(function () use ($data, $board, $menu) {
+            $title = isset($data['subject']) ? trim($data['subject']) : "";
+            $content = $data['content'];
+            $isNotice = isset($data['is_notice']) ? 1 : 0;
+            $isSecret = isset($data['is_secret']) ? 1 : 0;
+        
+            $customData = [];
+            $rawCustom = $data['custom'] ?? [];
+        
+            $myLevel = $_SESSION['level'] ?? 0;
+            if ($myLevel < $board->write_level) {
+                return ['success' => false, 'message' => '글 쓰기 권한이 없습니다.'];
+            }
+    
+            if($board->use_secret < 1){
+                $isSecret = 0;
+            }
+        
+            $content = cleanHtml($content);
+            
+            $definedFields = $board->custom_fields ? json_decode($board->custom_fields, true) : [];
+        
+            foreach ($definedFields as $field) {
+                $fieldName = $field['name'];
+                $val = $rawCustom[$fieldName] ?? null;
+        
+                if (is_array($val)) {
+                    $val = implode(',', $val);
+                }
+                
+                if (!empty($field['required']) && empty($val)) {
+                     return ['success' => false, 'message' => $fieldName . ' 필드는 필수입니다.'];
+                }
+        
+                $customData[$fieldName] = $val;
+            }
+        
+            $jsonCustomData = !empty($customData) ? json_encode($customData, JSON_UNESCAPED_UNICODE) : null;
+        
+            $userId = $_SESSION['user_idx'] ?? 0;
+            $nickname = $_SESSION['nickname'] ?? '손님';
+            $ip = $_SERVER['REMOTE_ADDR'];
+        
+            $seq = DB::table('board_sequences')
+                     ->where('board_id', $board->id)
+                     ->lockForUpdate()
+                     ->first();
+        
+            if (!$seq) {
+                DB::table('board_sequences')->insert(['board_id' => $board->id, 'last_num' => 0]);
+                $nextNum = 1;
+            } else {
+                $nextNum = $seq->last_num + 1;
+            }
+        
+            DB::table('documents')->insert([
+                'group_id' => $menu->group_id,
+                'board_id' => $board->id,
+                'doc_num' => $nextNum,
+                'user_id' => $userId,
+                'nickname' => $nickname,
+                'title' => $title,
+                'content' => $content,
+                'custom_data' => $jsonCustomData,
+                'is_notice' => $isNotice,
+                'is_secret' => $isSecret,
+                'hit' => 0,
+                'comment_count' => 0,
+                'ip_address' => $ip,
+                'created_at' => date('Y-m-d H:i:s')
+            ]);
+        
+            DB::table('board_sequences')
+              ->where('board_id', $board->id)
+              ->update(['last_num' => $nextNum]);
+        });
+    
+    
+        return ['success' => true];
+    }
+
+    private function saveLoadPost($request, $board, $menu)  
+    {
+        $data = $request->getParsedBody();
+    
+        DB::connection()->transaction(function () use ($request, $data, $board, $menu) {
+    
+            $title = "로드 게시물";
+            $content = "";
+            $isSecret = isset($data['is_secret']) ? 1 : 0;
+            
+            $reply = isset($data['reply']) ? $data['reply'] : "";
+    
+            $uploadedFiles = $request->getUploadedFiles();
+            $fileInputName = 'content';
+    
+            if (isset($uploadedFiles[$fileInputName]) && $uploadedFiles[$fileInputName]->getError() === UPLOAD_ERR_OK) {
+                $file = $uploadedFiles[$fileInputName];
+                
+                $uploadDir = __DIR__ . '/../public/data/uploads/images';
+                if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
+                
+                $filename = uniqid() . '_' . $file->getClientFilename();
+                $file->moveTo($uploadDir . '/' . $filename);
+                
+                $content = '/public/data/uploads/images/' . $filename; 
+            }
+    
+            $userId = $_SESSION['user_idx'] ?? 0;
+            $nickname = $_SESSION['nickname'] ?? '손님';
+            $ip = $_SERVER['REMOTE_ADDR'];
+    
+            $replyCnt = ($reply != "" ? 1 : 0);
+    
+            $seq = DB::table('board_sequences')
+                     ->where('board_id', $board->id)
+                     ->lockForUpdate()
+                     ->first();
+        
+            if (!$seq) {
+                DB::table('board_sequences')->insert(['board_id' => $board->id, 'last_num' => 0]);
+                $nextNum = 1;
+            } else {
+                $nextNum = $seq->last_num + 1;
+            }
+        
+            $docId = DB::table('documents')->insertGetId([
+                'group_id' => $menu->group_id,
+                'board_id' => $board->id,
+                'user_id' => $userId,
+                'nickname' => $nickname,
+                'title' => $title,
+                'content' => $content,
+                'custom_data' => null,
+                'is_notice' => 0,
+                'is_secret' => $isSecret,
+                'hit' => 0,
+                'comment_count' => $replyCnt,
+                'ip_address' => $ip,
+                'created_at' => date('Y-m-d H:i:s')
+            ]);
+    
+            if ($reply != "") {
+                $reply = cleanHtml($reply);
+                DB::table('comments')->insert([
+                    'board_id' => $board->id,
+                    'doc_id' => $docId,
+                    'user_id' => $userId,
+                    'nickname' => $nickname,
+                    'content' => trim($reply),
+                    'ip_address' => $ip,
+                    'created_at' => date('Y-m-d H:i:s')
+                ]);
+            }
+        
+            DB::table('board_sequences')
+              ->where('board_id', $board->id)
+              ->update(['last_num' => $nextNum]);
+        });
+        
+    
+        return ['success' => true];
+    
+    }
+
+    private function getPluginId($target, $id){
+        $plugins = DB::table('plugin_meta')
+        ->where('target_type', $target)
+        ->where('target_id', $id)
+        ->first();
+        return $plugins->value ?? '';
+    }
+    
+
 }

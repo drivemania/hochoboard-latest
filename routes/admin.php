@@ -6,10 +6,12 @@ use Slim\Routing\RouteCollectorProxy;
 use Slim\Psr7\Response as SlimResponse;
 use App\Services\VersionService;
 use App\Controller\AdminPluginController;
+use App\Middleware\AdminMiddleware;
 
 $basePath = $app->getBasePath();
 
 $adminPluginController = new AdminPluginController($blade, $basePath);
+$adminMiddleware = new AdminMiddleware($basePath);
 
 function getSkinList($basePath, $type = 'document') {
     $skinDir = __DIR__ . '/../public/skins/'.$type;
@@ -24,8 +26,7 @@ function getSkinList($basePath, $type = 'document') {
             $skinInfo = [
                 'id' => $folder,
                 'name' => $folder,
-                'description' => '설명 파일이 없습니다.',
-                'thumb' => '/img/no_image.png',
+                'description' => '설명 파일이 없습니다.'
             ];
 
             $configFile = $skinDir . '/' . $folder . '/skin.json';
@@ -37,36 +38,11 @@ function getSkinList($basePath, $type = 'document') {
                 }
             }
 
-            $thumbFile = $skinDir . '/' . $folder . '/thumb.png';
-            if (file_exists($thumbFile)) {
-                $skinInfo['thumb'] = $basePath . '/skins/'.$type.'/' . $folder . '/thumb.png';
-            } else {
-                $skinInfo['thumb'] = null; 
-            }
-
             $skins[] = $skinInfo;
         }
     }
     return $skins;
 }
-
-$adminMiddleware = function (Request $request, $handler) use ($basePath) {
-    
-    if (!isset($_SESSION['user_id'])) {
-        $response = new SlimResponse();
-        return $response->withHeader('Location', $basePath . '/login')->withStatus(302);
-    }
-
-    if ($_SESSION['level'] < 10) {
-        $_SESSION['flash_message'] = '관리자만 접근할 수 있습니다.';
-        $_SESSION['flash_type'] = 'error';
-        
-        $response = new SlimResponse();
-        return $response->withHeader('Location', $basePath . '/')->withStatus(302);
-    }
-
-    return $handler->handle($request);
-};
 
 $app->group('/admin', function (RouteCollectorProxy $group) use ($blade, $basePath, $adminPluginController) {
 
@@ -85,6 +61,7 @@ $app->group('/admin', function (RouteCollectorProxy $group) use ($blade, $basePa
                 'documents.created_at',
                 'menus.slug as menu_slug',
                 'documents.id as doc_id',
+                'documents.doc_num as doc_num',
                 'menus.type as menu_type',
                 DB::raw("NULL as comment_id"),
                 DB::raw("'doc' as type")
@@ -99,11 +76,13 @@ $app->group('/admin', function (RouteCollectorProxy $group) use ($blade, $basePa
             ->where('comments.is_deleted', 0)
             ->where('menus.is_deleted', 0)
             ->where('documents.is_secret', 0)
+            ->where('documents.is_deleted', 0)
             ->select(
                 'comments.content as subject',
                 'comments.created_at',
                 'menus.slug as menu_slug',
                 'documents.id as doc_id',
+                'documents.doc_num as doc_num',
                 'menus.type as menu_type',
                 'comments.id as comment_id',
                 DB::raw("'cmt' as type")
@@ -116,11 +95,13 @@ $app->group('/admin', function (RouteCollectorProxy $group) use ($blade, $basePa
 
         $users = DB::table('users')
             ->where('is_deleted', 0)
+            ->orderBy('created_at', 'desc')
             ->limit(5)
             ->get();
 
         $groups = DB::table('groups')
             ->where('is_deleted', 0)
+            ->orderBy('created_at', 'desc')
             ->first();
 
         $vService = new VersionService();
@@ -187,7 +168,7 @@ $app->group('/admin', function (RouteCollectorProxy $group) use ($blade, $basePa
             }
 
             $exists = DB::table('groups')->where('slug', $slug)->exists();
-            if ($exists || in_array($slug, ['admin', 'login', 'register', 'logout', 'au', 'page'])) {
+            if ($exists || in_array($slug, ['admin', 'login', 'register', 'logout', 'au', 'page', 'memo', 'plugin', 'comment'])) {
                 $_SESSION['flash_message'] = '사용할 수 없는 그룹 ID입니다.';
                 $_SESSION['flash_type'] = 'error';
                 return $response->withHeader('Location', $basePath . '/admin/groups')->withStatus(302);
@@ -435,6 +416,7 @@ $app->group('/admin', function (RouteCollectorProxy $group) use ($blade, $basePa
                     'read_level' => (int)$data['read_level'],
                     'write_level' => (int)$data['write_level'],
                     'comment_level' => (int)$data['comment_level'],
+                    'use_secret' => isset($data['use_secret']) ? 1 : 0,
                     'use_editor' => isset($data['use_editor']) ? 1 : 0,
                     'custom_fields' => $jsonFields
                 ]);
@@ -466,7 +448,6 @@ $app->group('/admin', function (RouteCollectorProxy $group) use ($blade, $basePa
 
             $board = DB::table('boards')->find($data['id']);
             if ($board) {
-                $newSlug = $board->slug . '_deleted_' . time();
                 DB::table('boards')
                     ->where('id', $data['id'])
                     ->update([
@@ -753,7 +734,8 @@ $app->group('/admin', function (RouteCollectorProxy $group) use ($blade, $basePa
                         $cleanFields[] = [
                             'name' => trim($field['name']),
                             'type' => $field['type'],
-                            'required' => isset($field['required']) ? 1 : 0
+                            'required' => isset($field['required']) ? 1 : 0,
+                            'options' => isset($field['options']) ? $field['options'] : ""
                         ];
                     }
                 }
@@ -799,6 +781,11 @@ $app->group('/admin', function (RouteCollectorProxy $group) use ($blade, $basePa
             }
 
             $characters = $query->orderBy('characters.id', 'desc')->paginate(15, ['*'], 'page', $page);
+            foreach($characters as $cha){
+                if( mb_strlen($cha->name) > 15 ){
+                    $cha->name = mb_substr($cha->name, 0, 12) . '...';
+                }
+            }
 
             $content = $blade->render('admin.characters.index', [
                 'characters' => $characters,
@@ -806,6 +793,23 @@ $app->group('/admin', function (RouteCollectorProxy $group) use ($blade, $basePa
             ]);
             $response->getBody()->write($content);
             return $response;
+        });
+
+        $group->get('/boards/{group_id}', function (Request $request, Response $response, $args) {
+            $groupId = $args['group_id'];
+            
+            $boards = DB::table('boards')
+                ->join('menus', 'boards.id', '=', 'menus.target_id')
+                ->where('menus.group_id', $groupId)
+                ->where('boards.type', 'character')
+                ->where('boards.is_deleted', 0)
+                ->select('boards.id', 'boards.title')
+                ->distinct()
+                ->get();
+                
+            $payload = json_encode($boards);
+            $response->getBody()->write($payload);
+            return $response->withHeader('Content-Type', 'application/json');
         });
 
         $group->post('/move', function (Request $request, Response $response) {

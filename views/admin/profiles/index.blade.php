@@ -31,7 +31,7 @@
                 </td>
                 <td class="px-6 py-4 text-right">
                     <a href="{{ $base_path }}/admin/profiles/{{ $group->id }}" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 text-sm font-bold">
-                        설정하기 ➔
+                        설정
                     </a>
                 </td>
             </tr>

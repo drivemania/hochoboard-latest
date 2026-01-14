@@ -48,4 +48,20 @@ class Helper {
             ->first();
         return $results;
     }
+
+    /**
+     * 파일 수정 시간을 기반으로 version 붙여주는 함수
+     * @param string  $path     파일 위치
+     * @return string $path     파일 위치+버전
+     */
+    public static function asset($path) {
+        $realPath = __DIR__ . '/../../' . $path;
+        
+        if (file_exists($realPath)) {
+            $ver = filemtime($realPath);
+            return $path . '?v=' . $ver;
+        }
+        
+        return $path;
+    }
 }

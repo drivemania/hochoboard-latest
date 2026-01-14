@@ -18,8 +18,8 @@
         </div>
     </div>
     @php
-        $customFields = json_decode($board->custom_fields, true) ?? [];
-        $savedData = json_decode($document->custom_data, true) ?? [];
+        $customFields = $board->custom_fields ? json_decode($board->custom_fields, true) : [];
+        $savedData = $document->custom_data ? json_decode($document->custom_data, true) : [];
     @endphp
 
     @if(!empty($customFields))
@@ -77,13 +77,13 @@
 
                             <form x-show="!editMode" action="{{ $base_path }}/comment/delete" method="POST" onsubmit="return confirm('댓글을 삭제할까요?');" class="inline">
                                 <input type="hidden" name="comment_id" value="{{ $cmt->id }}">
-                                <input type="hidden" name="doc_id" value="{{ $document->id }}">
+                                <input type="hidden" name="doc_id" value="{{ $document->doc_num }}">
                                 <button class="text-xs text-red-400 hover:text-red-600">삭제</button>
                             </form>
                         @endif
                     </div>
                 </div>
-
+                {!! $cmt->plugin ?? '' !!}
                 <div x-show="!editMode" class="text-sm text-gray-700 whitespace-pre-wrap">{!! $cmt->content !!}</div>
 
                 @if( (isset($_SESSION['user_id']) && $_SESSION['user_id'] == $cmt->user_id) || ($_SESSION['level'] ?? 0) >= 10 )

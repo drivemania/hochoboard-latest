@@ -39,4 +39,3 @@ HOCHOBOARD는 다음 오픈 소스 라이브러리를 포함하거나 사용하�
 * **CKEditor 5** (GPL 2+ License) - Compatible with this project's license
 * **HTML Purifier** (LGPL License)
 * **SortableJS** (MIT License)
-* **Tom Select** (Apache License 2.0)

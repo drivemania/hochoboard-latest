@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 @section('title', '프로필 양식 설정 - ' . $group->name)
-@section('header', $group->name . ' : 캐릭터 설정')
+@section('header', $group->name . ' : 프로필 양식 설정')
 
 @section('content')
 <div class="max-w-4xl mx-auto">
@@ -35,7 +35,7 @@
             <div x-data="{ 
                 fields: {{ $group->char_fixed_fields ? $group->char_fixed_fields : '[]' }},
                 addField() {
-                    this.fields.push({ name: '', type: 'text', required: 0 });
+                    this.fields.push({ name: '', type: 'text', required: 0, options: '' });
                 },
                 removeField(index) {
                     if(confirm('이 항목을 삭제하시겠습니까?')) {
@@ -45,10 +45,11 @@
             }">
                 <div class="space-y-3">
                     <template x-for="(field, index) in fields" :key="index">
-                        <div class="flex flex-wrap items-start gap-2 p-3 bg-gray-50 rounded border">
+                        <div class="flex flex-wrap items-start gap-2 p-3 bg-gray-50 rounded border transition-all duration-200">
+                            
                             <div class="flex-1 min-w-[150px]">
                                 <label class="block text-xs text-gray-500 mb-1">항목명</label>
-                                <input type="text" :name="`char_fields[${index}][name]`" x-model="field.name" class="w-full border rounded px-2 py-1 text-sm" placeholder="예: STR, 키, 외관" required>
+                                <input type="text" :name="`char_fields[${index}][name]`" x-model="field.name" class="w-full border rounded px-2 py-1 text-sm" placeholder="예: 혈액형, 진영" required>
                             </div>
 
                             <div class="w-32">
@@ -56,6 +57,8 @@
                                 <select :name="`char_fields[${index}][type]`" x-model="field.type" class="w-full border rounded px-2 py-1 text-sm bg-white">
                                     <option value="text">한줄 텍스트</option>
                                     <option value="textarea">여러줄 텍스트</option>
+                                    <option value="select">선택 박스 (▼)</option>
+                                    {{-- <option value="file">파일 첨부</option> --}}
                                 </select>
                             </div>
 
@@ -69,6 +72,18 @@
                             <div class="pt-5">
                                 <button type="button" @click="removeField(index)" class="text-red-500 font-bold text-sm hover:text-red-700">×</button>
                             </div>
+
+                            <div class="w-full mt-2 border-t pt-2" x-show="field.type === 'select'" x-transition>
+                                <label class="block text-xs font-bold text-indigo-600 mb-1">
+                                    💡 선택지 입력 (쉼표 <code class="bg-gray-200 px-1 rounded">,</code>로 구분)
+                                </label>
+                                <input type="text" 
+                                       :name="`char_fields[${index}][options]`" 
+                                       x-model="field.options" 
+                                       class="w-full border border-indigo-300 rounded px-2 py-1 text-sm bg-indigo-50 placeholder-indigo-300" 
+                                       placeholder="성별이나 진영 등을 선택할 수 있습니다.">
+                            </div>
+
                         </div>
                     </template>
                 </div>

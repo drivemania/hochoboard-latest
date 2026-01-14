@@ -32,10 +32,12 @@ $keyword = $_GET['keyword'] ?? "";
                       placeholder="내용을 입력해주세요..."></textarea>
             
             <div class="flex justify-between items-center mt-2">
+                @if($board->use_secret > 0)
                 <label class="flex items-center space-x-2 cursor-pointer text-sm text-gray-600 select-none">
                     <input type="checkbox" name="is_secret" class="form-checkbox h-4 w-4 text-indigo-600 rounded border-gray-300">
                     <span>🔒 비밀글로 남기기</span>
                 </label>
+                @endif
                 <button type="submit" class="px-6 py-2 bg-indigo-600 text-white text-sm font-bold rounded-lg hover:bg-indigo-700 transition shadow-sm">
                     등록하기
                 </button>
@@ -45,7 +47,7 @@ $keyword = $_GET['keyword'] ?? "";
 
     <div class="space-y-4">
         @forelse($documents as $doc)
-        @if(!$doc->is_secret || $_SESSION['level'] === 10)
+        @if(!$doc->is_secret || $_SESSION['level'] === 10 || $doc->user_id === $_SESSION['user_idx'])
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
             <div class="flex items-start justify-between">
                 <div class="flex items-start space-x-3 w-full">
@@ -60,7 +62,7 @@ $keyword = $_GET['keyword'] ?? "";
                     
                     <div class="w-full">
                         <div class="flex items-center justify-between mb-1">
-                            <span class="font-bold text-gray-800 text-sm">{{ $doc->nickname }}</span>
+                            <span class="font-bold text-gray-800 text-sm">{{ $doc->nickname }} {{ $doc->is_secret ? '🔒' : '' }}</span>
                             <span class="text-xs text-gray-400">{{ date('Y.m.d H:i', strtotime($doc->created_at)) }}</span>
                         </div>
                         <p class="text-gray-700 text-sm leading-relaxed mb-2">
@@ -69,13 +71,13 @@ $keyword = $_GET['keyword'] ?? "";
                         
                         <div class="flex items-center space-x-3">
                             @if(($_SESSION['level'] ?? 0) >= $board->comment_level)
-                            <button onclick="toggleReplyForm(1)" class="text-xs text-indigo-600 font-semibold hover:underline flex items-center">
+                            <button onclick="toggleReplyForm({{ $doc->id }})" class="text-xs text-indigo-600 font-semibold hover:underline flex items-center">
                                 <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path></svg>
                                 답글 달기
                             </button>
                             @endif
                             @if(($_SESSION['user_idx'] ?? 0) == $doc->user_id || $_SESSION['level'] === 10)
-                            <form action="{{ $currentUrl }}/{{ $doc->id }}/delete" method="POST" onsubmit="return confirm('정말 삭제하시겠습니까?');">
+                            <form action="{{ $currentUrl }}/{{ $doc->doc_num }}/delete" method="POST" onsubmit="return confirm('정말 삭제하시겠습니까?');">
                                 <button class="text-xs text-red-400 hover:text-red-600 hover:underline">삭제</button>
                             </form>
                             @endif
@@ -105,7 +107,7 @@ $keyword = $_GET['keyword'] ?? "";
                                 @endif
                             </div>
                             <p class="text-gray-700 text-sm">
-                                {{ $cmt->content }}
+                                {!! nl2br($cmt->content) !!}
                             </p>
                         </div>
                     </div>
@@ -114,8 +116,8 @@ $keyword = $_GET['keyword'] ?? "";
             @else
             @endif
             @if(($_SESSION['level'] ?? 0) >= $board->comment_level)
-            <div id="reply-form-1" class="hidden mt-4 ml-12 animate-fade-in-down">
-                <form action="{{ $currentUrl }}/{{ $doc->id }}/comment" method="POST" class="flex items-start space-x-2">
+            <div id="reply-form-{{ $doc->id }}" class="hidden mt-4 ml-12 animate-fade-in-down">
+                <form action="{{ $currentUrl }}/{{ $doc->doc_num }}/comment" method="POST" class="flex items-start space-x-2">
                     <textarea name="content" class="w-full h-20 p-3 bg-white border border-indigo-200 rounded focus:outline-none focus:border-indigo-500 text-sm resize-none" placeholder="답글 내용을 입력하세요..."></textarea>
                     <button type="submit" class="h-20 w-16 bg-indigo-600 text-white rounded hover:bg-indigo-700 text-sm font-bold flex flex-col items-center justify-center">
                         <span>등록</span>

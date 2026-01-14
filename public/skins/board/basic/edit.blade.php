@@ -38,8 +38,8 @@
         </div>
 
         @php
-            $customFields = json_decode($board->custom_fields, true) ?? [];
-            $savedData = json_decode($document->custom_data, true) ?? [];
+            $customFields = $board->custom_fields ? json_decode($board->custom_fields, true) : [];
+            $savedData = $document->custom_data ? json_decode($document->custom_data, true) : [];
         @endphp
 
         @if(!empty($customFields))

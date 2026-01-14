@@ -12,7 +12,7 @@
                 x-transition:enter-start="opacity-0 scale-95"
                 x-transition:enter-end="opacity-100 scale-100"
                 class="absolute inset-0 w-full h-full">
-                <a href="#"><img src="{{ $themeUrl }}/image/banner1.png" class="w-full h-full object-cover" alt="Slide 1"></a>
+                <a href="#"><img src="{{ $themeUrl }}/image/banner1.png?v={{ date("YmdHis") }}" class="w-full h-full object-cover" alt="Slide 1"></a>
             </div>
         </div>
 

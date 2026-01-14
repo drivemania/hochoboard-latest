@@ -34,7 +34,7 @@
         </div>
 
         @php
-            $customFields = json_decode($board->custom_fields, true) ?? [];
+            $customFields = $board->custom_fields ? json_decode($board->custom_fields, true) : [];
         @endphp
 
         @if(!empty($customFields))

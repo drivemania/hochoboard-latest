@@ -16,6 +16,23 @@
     color: #2563EB;      /* 호버/활성 색상 (파랑) */
 }
 
+@media (max-width: 48rem) {
+    .hc-menu-list {
+        display: block;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #f3f4f6;
+        color: #4b5563;
+    }
+    
+    .hc-menu-list:last-child {
+        border-bottom: none;
+    }
+
+    .hc-menu-item {
+        margin-bottom: 10px;
+    }
+}
+
 /* [2] 로그인 위젯 디자인 */
 .hc-login-widget {
     border: 1px solid #e5e7eb;
@@ -45,6 +62,16 @@
     border-radius: 4px;
     box-sizing: border-box; /* width:100% 사용시 필수 */
 }
+.hc-login-auto-login {
+    margin-bottom: 8px;
+}
+.hc-login-auto-login label {
+    color: #6b7280;
+    text-decoration: none;
+    font-size: 12px;
+    margin-left: 5px;
+}
+
 .hc-login-btn-submit {
     width: 100%;
     padding: 8px;
@@ -89,7 +116,7 @@
 /* 버튼 그룹 */
 .hc-login-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
 .hc-login-btn-admin { grid-column: span 2; background: #333; color: #fff; text-align: center; padding: 5px; border-radius: 4px; font-size: 12px; }
-.hc-login-btn-logout, .hc-login-btn-info { border: 1px solid #ddd; color: #666; text-align: center; padding: 5px; border-radius: 4px; font-size: 12px; }
+.hc-login-btn-logout, .hc-login-btn-info { grid-column: span 2; border: 1px solid #ddd; color: #666; text-align: center; padding: 5px; border-radius: 4px; font-size: 12px; }
 
 .hc-latest-widget {
     background: #fff;

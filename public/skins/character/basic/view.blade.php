@@ -8,14 +8,12 @@
 @endpush
 
 <div class="max-w-4xl mx-auto bg-white rounded-lg shadow overflow-hidden border">
-    <div class="bg-gray-800 h-32 flex">
-        <h1 class="text-2xl font-bold text-white-500 items-center text-left">
-            <p class="m-5 ml-44 mt-20 text-white text-justify">
+    <div class="bg-gray-800 min-h-[8rem] flex items-end pb-6">
+        <div class="w-full max-w-5xl mx-auto px-4 md:px-10">
+            <h1 class="text-2xl font-bold text-white break-words leading-tight mt-10 ml-36">
                 {{ $character->name }}
-            </p>
-
-
-        </h1>
+            </h1>
+        </div>
     </div>
     
     <div class="px-6 pb-6 relative">
@@ -64,7 +62,7 @@
                             @endif
 
                         @elseif(isset($item['type']) && $item['type'] === 'textarea')
-                            <div class="whitespace-pre-wrap">{{ $item['value'] }}</div>
+                            <div class="whitespace-pre-wrap">{!! $item['value'] !!}</div>
                         
                         @else
                             {{ $item['value'] }}
@@ -83,10 +81,13 @@
             </h3>
 
             <div id="relation-list" class="grid grid-cols-1 md:grid-cols-1 gap-4">
-                @forelse($relations as $rel)
-                <div data-id="{{ $rel['target_id'] }}" class="bg-gray-50 border border-gray-100 rounded-lg p-3 flex items-start relative group hover:shadow-sm transition">
+            @forelse($relations as $rel)
+                <div x-data="{ isEditing: false, textContent: `{{ $rel['text'] }}` }" 
+                     data-id="{{ $rel['target_id'] }}" 
+                     class="bg-gray-50 border border-gray-100 rounded-lg p-3 flex items-start relative group hover:shadow-sm transition">
+                    
                     @if(isset($_SESSION['user_idx']) && $_SESSION['user_idx'] == $character->user_id)
-                    <div class="drag-handle cursor-move absolute top-2 left-2 text-gray-300 hover:text-gray-500 z-10 p-1">
+                    <div x-show="!isEditing" class="drag-handle cursor-move absolute top-2 left-2 text-gray-300 hover:text-gray-500 z-10 p-1">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path></svg>
                     </div>
                     <div class="ml-6 w-14 h-14 rounded-full overflow-hidden flex-shrink-0 border border-gray-200 mr-3 mt-1">
@@ -101,6 +102,7 @@
                             <a href="{{ $currentUrl }}/{{ $rel['target_id'] }}" class="text-sm font-bold text-gray-800 hover:text-indigo-600 hover:underline">
                                 {{ $rel['target_name'] }}
                             </a>
+                            
                             <span class="text-xs font-mono px-2 py-0.5 rounded bg-white border">
                                 @if($rel['favor'] > 0)
                                     💖 +{{ $rel['favor'] }}
@@ -112,25 +114,50 @@
                             </span>
                         </div>
                         
-                        <div class="text-sm text-gray-600 mt-1 break-words leading-relaxed">
+                        <div x-show="!isEditing" class="text-sm text-gray-600 mt-1 break-words leading-relaxed">
                             {!! $rel['text'] !!}
                         </div>
+            
+                        @if(isset($_SESSION['user_idx']) && $_SESSION['user_idx'] == $character->user_id)
+                        <form x-show="isEditing" 
+                              action="{{ $currentUrl }}/{{ $character->id }}/relation/update" 
+                              method="POST" 
+                              class="mt-2"
+                              x-cloak> <input type="hidden" name="target_id" value="{{ $rel['target_id'] }}">
+                            
+                            <textarea name="relation_text" 
+                                      rows="3" 
+                                      class="w-full text-sm border-gray-300 rounded focus:ring-indigo-500 mb-2" 
+                                      required>{{ str_replace('<br />', "\n", $rel['text']) }}</textarea> <div class="flex justify-end space-x-2">
+                                <button type="button" @click="isEditing = false" class="text-xs bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1 rounded font-bold">
+                                    취소
+                                </button>
+                                <button type="submit" class="text-xs bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1 rounded font-bold">
+                                    저장
+                                </button>
+                            </div>
+                        </form>
+                        @endif
                     </div>
-
+            
                     @if(isset($_SESSION['user_idx']) && $_SESSION['user_idx'] == $character->user_id)
-                    <form action="{{ $currentUrl }}/{{ $character->id }}/relation/delete" method="POST" onsubmit="return confirm('삭제하시겠습니까?');" class="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition">
-                        <input type="hidden" name="target_id" value="{{ $rel['target_id'] }}">
-                        <button type="submit" class="bg-red-500 text-white rounded-full p-1 shadow hover:bg-red-600">
-                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    <div x-show="!isEditing" class="absolute -top-2 -right-2 flex space-x-1 opacity-0 group-hover:opacity-100 transition">
+                        
+                        <button type="button" @click="isEditing = true" class="bg-blue-500 text-white rounded-full p-1 shadow hover:bg-blue-600">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                         </button>
-                    </form>
+            
+                        <form action="{{ $currentUrl }}/{{ $character->id }}/relation/delete" method="POST" onsubmit="return confirm('삭제하시겠습니까?');">
+                            <input type="hidden" name="target_id" value="{{ $rel['target_id'] }}">
+                            <button type="submit" class="bg-red-500 text-white rounded-full p-1 shadow hover:bg-red-600">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                            </button>
+                        </form>
+                    </div>
                     @endif
                 </div>
-                @empty
-                <div class="col-span-full text-center text-gray-400 text-sm py-4 bg-gray-50 rounded border border-dashed">
-                    등록된 관계가 없습니다.
-                </div>
-                @endforelse
+            @empty
+            @endforelse
             </div>
 
             @if(isset($_SESSION['user_idx']) && $_SESSION['user_idx'] == $character->user_id)

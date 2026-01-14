@@ -15,10 +15,10 @@
     </div>
 
     <div class="bg-white rounded-lg shadow overflow-hidden">
-        <table class="w-full text-left border-collapse">
+        <table class="w-full text-left text-sm border-collapse">
             <thead>
                 <tr class="bg-gray-100 border-b border-gray-200 text-gray-600 text-sm uppercase">
-                    <th class="px-6 py-3">ID</th>
+                    <th class="hidden md:table-cell px-6 py-3">ID</th>
                     <th class="px-6 py-3">그룹명 (접속주소)</th>
                     <th class="px-6 py-3">스킨</th>
                     <th class="px-6 py-3">상태</th>
@@ -28,7 +28,7 @@
             <tbody class="divide-y divide-gray-200">
                 @foreach($group as $g)
                 <tr class="hover:bg-gray-50">
-                    <td class="px-6 py-4 text-gray-500">#{{ $g->id }}</td>
+                    <td class="hidden md:table-cell px-6 py-4 text-gray-500">#{{ $g->id }}</td>
                     <td class="px-6 py-4">
                         <div class="font-bold text-gray-800">{{ $g->name }}</div>
                         <div class="text-sm text-gray-500">/au/{{ $g->slug }}</div>

@@ -4,8 +4,8 @@
 @section('header', '대시보드')
 
 @section('content')
-<div>
-    <div class="grid grid-cols-1 gap-4 mb-6">
+<div class="p-6">
+    <div class="grid grid-cols-1 gap-6 mb-6">
         @if ($updateInfo['has_update'])
         <div class="bg-indigo-600 text-white p-4 rounded-lg shadow-lg mb-6 flex justify-between items-center">
             <div>
@@ -53,6 +53,10 @@
                     if (mb_strlen($subject) > $cutSubject) {
                         $subject = mb_substr($subject, 0, $cutSubject) . '...';
                     }
+                    
+                    if(mb_strlen($subject) <= 0){
+                        $subject = '...';
+                    }
 
                     $url = $base_path . '/' . $item->menu_slug . '/' . $item->doc_id;
                     if ($item->type === 'cmt') {
@@ -89,7 +93,7 @@
             </ul>
         </div>
     </div>
-    <div class="grid grid-cols-2 lg:grid-cols-2 gap-6 mb-6">
+    <div class="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <div class="bg-white rounded-lg shadow p-5">
             <h3 class="text-lg font-semibold text-gray-800 mb-4 flex justify-between items-end">
                 <div class="flex items-baseline gap-2">

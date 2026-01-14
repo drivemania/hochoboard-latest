@@ -11,6 +11,8 @@ class ContentParser
 
     public function parse($content)
     {
+        $content = $content ?? '';
+
         $content = preg_replace_callback(
             '/@hc_menu\((.*?)\)/',
             function ($matches) {

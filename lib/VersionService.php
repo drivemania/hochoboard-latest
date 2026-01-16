@@ -2,7 +2,7 @@
 namespace App\Services;
 
 class VersionService {
-    const CURRENT_VERSION = '0.0.5';
+    const CURRENT_VERSION = '0.0.6';
     
     const UPDATE_URL = 'https://drivemania.github.io/hochoboard-doc/version.json';
     

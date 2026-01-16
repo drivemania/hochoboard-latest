@@ -240,9 +240,10 @@ class BoardController extends Model
                             ->where('characters.is_main', '=', 1);
                     })
                     ->leftJoin('groups as char_group', 'characters.group_id', '=', 'char_group.id')
-                    ->leftJoin('menus as char_menu', function($join) {
+                    ->leftJoin('menus as char_menu', function($join) use ($group) {
                         $join->on('characters.board_id', '=', 'char_menu.target_id')
                             ->where('char_menu.type', '=', 'character')
+                            ->where('char_menu.group_id', '=', $group->id)
                             ->where('char_menu.is_deleted', '=', 0);
                     })
                     ->where('documents.board_id', $board->id)
@@ -308,9 +309,10 @@ class BoardController extends Model
                                 ->where('characters.is_main', '=', 1);
                         })
                         ->leftJoin('groups as char_group', 'characters.group_id', '=', 'char_group.id')
-                        ->leftJoin('menus as char_menu', function($join) {
+                        ->leftJoin('menus as char_menu', function($join) use ($group) {
                             $join->on('characters.board_id', '=', 'char_menu.target_id')
                                 ->where('char_menu.type', '=', 'character')
+                                ->where('char_menu.group_id', '=', $group->id)
                                 ->where('char_menu.is_deleted', '=', 0);
                         })
                         ->where('comments.doc_id', $doc->id)
@@ -510,9 +512,10 @@ class BoardController extends Model
                              ->where('characters.group_id', '=', $group->id)
                              ->where('characters.is_main', '=', 1);
                     })
-                    ->leftJoin('menus as char_menu', function($join) {
+                    ->leftJoin('menus as char_menu', function($join) use ($group) {
                         $join->on('characters.board_id', '=', 'char_menu.target_id')
                              ->where('char_menu.type', '=', 'character')
+                             ->where('char_menu.group_id', '=', $group->id)
                              ->where('char_menu.is_deleted', '=', 0);
                     })
                     ->orderBy('documents.is_notice', 'desc')
@@ -542,9 +545,10 @@ class BoardController extends Model
                                 ->where('characters.group_id', '=', $group->id)
                                 ->where('characters.is_main', '=', 1);
                         })
-                        ->leftJoin('menus as char_menu', function($join) {
+                        ->leftJoin('menus as char_menu', function($join) use ($group) {
                             $join->on('characters.board_id', '=', 'char_menu.target_id')
                                 ->where('char_menu.type', '=', 'character')
+                                ->where('char_menu.group_id', '=', $group->id)
                                 ->where('char_menu.is_deleted', '=', 0);
                         })
                         ->orderBy('comments.created_at', 'asc')
@@ -611,9 +615,10 @@ class BoardController extends Model
                             ->where('characters.is_main', '=', 1);
                     })
                     ->leftJoin('groups as char_group', 'characters.group_id', '=', 'char_group.id')
-                    ->leftJoin('menus as char_menu', function($join) {
+                    ->leftJoin('menus as char_menu', function($join) use ($group) {
                         $join->on('characters.board_id', '=', 'char_menu.target_id')
                             ->where('char_menu.type', '=', 'character')
+                            ->where('char_menu.group_id', '=', $group->id)
                             ->where('char_menu.is_deleted', '=', 0);
                     })
                     ->where('documents.board_id', $board->id)
@@ -669,9 +674,10 @@ class BoardController extends Model
                                 ->where('characters.is_main', '=', 1);
                         })
                         ->leftJoin('groups as char_group', 'characters.group_id', '=', 'char_group.id')
-                        ->leftJoin('menus as char_menu', function($join) {
+                        ->leftJoin('menus as char_menu', function($join) use ($group) {
                             $join->on('characters.board_id', '=', 'char_menu.target_id')
                                 ->where('char_menu.type', '=', 'character')
+                                ->where('char_menu.group_id', '=', $group->id)
                                 ->where('char_menu.is_deleted', '=', 0);
                         })
                         ->where('comments.doc_id', $doc->id)
@@ -773,7 +779,6 @@ class BoardController extends Model
             $this->returnUrl = "/$menuSlug";
         }
 
-
         if (!$group) {
             $_SESSION['flash_message'] = "페이지를 찾을 수 없습니다. 1";
             $_SESSION['flash_type'] = 'error';
@@ -793,6 +798,8 @@ class BoardController extends Model
                 $_SESSION['flash_type'] = 'error';
                 return $response->withHeader('Location', $this->basePath . '/')->withStatus(302);
             };
+
+        
 
         if( $board->type == "load" ) {
             $result = $this->saveLoadPost($request, $board, $menu);
@@ -1117,6 +1124,11 @@ class BoardController extends Model
     private function savePost($request, $board, $menu) 
     {
         $data = $request->getParsedBody();
+                
+        $myLevel = $_SESSION['level'] ?? 0;
+        if ($myLevel < $board->write_level) {
+            return ['success' => false, 'message' => '글 쓰기 권한이 없습니다.'];
+        }
         DB::connection()->transaction(function () use ($data, $board, $menu) {
             $title = isset($data['subject']) ? trim($data['subject']) : "";
             $content = $data['content'];
@@ -1125,12 +1137,7 @@ class BoardController extends Model
         
             $customData = [];
             $rawCustom = $data['custom'] ?? [];
-        
-            $myLevel = $_SESSION['level'] ?? 0;
-            if ($myLevel < $board->write_level) {
-                return ['success' => false, 'message' => '글 쓰기 권한이 없습니다.'];
-            }
-    
+
             if($board->use_secret < 1){
                 $isSecret = 0;
             }
@@ -1201,6 +1208,11 @@ class BoardController extends Model
     private function saveLoadPost($request, $board, $menu)  
     {
         $data = $request->getParsedBody();
+
+        $myLevel = $_SESSION['level'] ?? 0;
+        if ($myLevel < $board->write_level) {
+            return ['success' => false, 'message' => '글 쓰기 권한이 없습니다.'];
+        }
     
         DB::connection()->transaction(function () use ($request, $data, $board, $menu) {
     

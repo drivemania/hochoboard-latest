@@ -25,17 +25,23 @@ class Widget {
 
         foreach ($menus as $m) {
             $group = DB::table('groups')->find($m->group_id);
-            
-            $link = "{$basePath}/au/{$group->slug}/{$m->slug}"; 
-            if($group->is_default === 1){
-                $link = "{$basePath}/{$m->slug}"; 
+
+            $a_target = "";
+            if($m->type == 'link'){
+                $link = $m->target_url;
+                $a_target = 'target="_blank"';
+            }else{
+                $link = "{$basePath}/au/{$group->slug}/{$m->slug}"; 
+                if($group->is_default === 1){
+                    $link = "{$basePath}/{$m->slug}"; 
+                }
             }
 
             $currentUri = $_SERVER['REQUEST_URI'] ?? '';
-            $isActive = (strpos($currentUri, $m->slug) !== false) ? ' active' : '';
+            $isActive = (strpos($currentUri, $m->slug) !== false && $m->type != 'link') ? ' active' : '';
 
             $html .= '<li class="hc-menu-item' . $isActive . '">';
-            $html .= '<a href="' . $link . '" class="hc-menu-link">' . htmlspecialchars($m->title) . '</a>';
+            $html .= '<a href="' . $link . '" class="hc-menu-link" '.$a_target.'>' . htmlspecialchars($m->title) . '</a>';
             $html .= '</li>';
         }
 
@@ -140,6 +146,7 @@ class Widget {
         $docs = DB::table('documents')
             ->join('menus', function($join) {
                 $join->on('documents.board_id', '=', 'menus.target_id')
+                    ->on('documents.group_id', '=', 'menus.group_id')
                     ->whereIn('menus.type', array('board', 'load'));
             })
             ->where('documents.is_deleted', 0)

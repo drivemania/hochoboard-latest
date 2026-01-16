@@ -7,10 +7,10 @@
 <link href="{{ $themeUrl }}/style.css?v={{ date("YmdHis") }}"  rel="stylesheet" type="text/css"></link>
 @endpush
 
-<div x-data="{ mobileMenuOpen: false }" class="relative min-h-screen flex flex-col">
+<div x-data="{ mobileMenuOpen: false }" class="relative min-h-screen flex flex-col pt-[61px]">
 
     {{-- [Basic 테마] 상단 네비게이션 --}}
-    <header class="sticky top-0 bg-white border-b border-gray-200 z-40">
+    <header class="fixed top-0 w-full left-0 bg-white border-b border-gray-200 z-40">
         <div class="max-w-5xl mx-auto px-4 py-4 flex justify-between items-center">
             
             <a href="{{ $mainUrl }}" class="text-xl font-bold text-indigo-600 relative shrink-0">

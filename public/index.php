@@ -1,9 +1,11 @@
 <?php
 use DI\Container;
+use Slim\Exception\HttpException;
 use Slim\Factory\AppFactory;
 use Illuminate\Database\Capsule\Manager as Capsule;
 use Illuminate\Pagination\Paginator;
 use Jenssegers\Blade\Blade;
+use Psr\Http\Message\ServerRequestInterface;
 
 $sessionLifeTime = 86400; 
 ini_set('session.gc_maxlifetime', $sessionLifeTime); 
@@ -115,15 +117,32 @@ $blade->compiler()->directive('hook', function ($expression) {
 
 $errorMiddleware = $app->addErrorMiddleware(false, true, true);
 $errorMiddleware->setErrorHandler(
-    \Slim\Exception\HttpNotFoundException::class,
-    function () use ($app, $blade) {
+    HttpException::class,
+    function (ServerRequestInterface $request, \Throwable $exception, bool $displayErrorDetails) use ($app, $blade) {
         $response = $app->getResponseFactory()->createResponse();
-        $content = $blade->render('errors.404', [
-            'title' => '페이지를 찾을 수 없습니다',
-            'errorMessage' => '요청하신 페이지가 존재하지 않습니다.'
+        
+        $code = $exception->getCode();
+        $message = $exception->getMessage();
+
+        $viewName = 'errors.default';
+
+        $titles = [
+            401 => '로그인이 필요합니다',
+            403 => '접근 권한이 없습니다',
+            404 => '페이지를 찾을 수 없습니다',
+            500 => '서버 내부 오류',
+        ];
+        $title = $titles[$code] ?? '오류가 발생했습니다';
+
+        $content = $blade->render($viewName, [
+            'title' => $title,
+            'errorMessage' => $message,
+            'code' => $code
         ]);
+
         $response->getBody()->write($content);
-        return $response->withStatus(404);
+        
+        return $response->withStatus($code);
     }
 );
 

@@ -93,7 +93,7 @@ if(!empty($document->content)){
                     </div>
                 </div>
                 {!! $cmt->plugin ?? '' !!}
-                <div x-show="!editMode" class="text-sm text-gray-700 whitespace-pre-wrap">{!! $cmt->content !!}</div>
+                <div x-show="!editMode" class="text-sm text-gray-700 whitespace-pre-wrap">{!! Helper::auto_link($cmt->content) !!}</div>
 
                 @if( (isset($_SESSION['user_id']) && $_SESSION['user_id'] == $cmt->user_id) || ($_SESSION['level'] ?? 0) >= 10 )
                 <div x-show="editMode" x-cloak class="mt-2">

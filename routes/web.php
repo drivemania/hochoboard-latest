@@ -332,11 +332,11 @@ $app->post('/au/{group_slug}/{menu_slug}/{id:[0-9]+}/relation/delete', [$charact
 
 $app->post('/au/{group_slug}/{menu_slug}/{id:[0-9]+}/relation/reorder', [$characterController, 'reorderRelation']);
 
-$app->post('/au/{group_slug}/{menu_slug}/{doc_id:[0-9]+}/edit', [$boardController, 'edit'])->setArgument('is_short', false)->add($secretCheckMiddleware);
+$app->post('/au/{group_slug}/{menu_slug}/{id:[0-9]+}/edit', [$boardController, 'edit'])->setArgument('is_short', false)->add($secretCheckMiddleware);
 
-$app->post('/au/{group_slug}/{menu_slug}/{doc_id:[0-9]+}/delete', [$boardController, 'bdelete'])->setArgument('is_short', false);
+$app->post('/au/{group_slug}/{menu_slug}/{id:[0-9]+}/delete', [$boardController, 'bdelete'])->setArgument('is_short', false);
 
-$app->post('/au/{group_slug}/{menu_slug}/{doc_id:[0-9]+}/comment', [$boardController, 'comment'])->setArgument('is_short', false)->add($secretCheckMiddleware);
+$app->post('/au/{group_slug}/{menu_slug}/{id:[0-9]+}/comment', [$boardController, 'comment'])->setArgument('is_short', false)->add($secretCheckMiddleware);
 
 $app->post('/au/{group_slug}/{menu_slug}/write', [$boardController, 'write']);
 

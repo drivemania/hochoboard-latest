@@ -182,7 +182,7 @@ class CharacterController
 
         $_SESSION['flash_message'] = "성공적으로 처리되었습니다.";
         $_SESSION['flash_type'] = 'success';
-        return $response->withHeader('Location', $_SERVER['HTTP_REFERER'] ?? $this->basePath . '/')->withStatus(302);
+        return $response->withHeader('Location', $this->returnUrl ?? $this->basePath . '/')->withStatus(302);
     }
 
     public function addRelation(Request $request, Response $response, $args)

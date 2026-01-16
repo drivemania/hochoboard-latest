@@ -71,6 +71,7 @@ $app->group('/admin', function (RouteCollectorProxy $group) use ($blade, $basePa
             ->join('documents', 'comments.doc_id', '=', 'documents.id')
             ->join('menus', function($join) {
                 $join->on('documents.board_id', '=', 'menus.target_id')
+                    ->on('documents.group_id', '=', 'menus.group_id')
                     ->whereIn('menus.type', array('board', 'load'));
             })
             ->where('comments.is_deleted', 0)
@@ -534,32 +535,57 @@ $app->group('/admin', function (RouteCollectorProxy $group) use ($blade, $basePa
             $data = $request->getParsedBody();
             
             $groupId = $data['group_id'];
-            $slug = trim($data['slug']);
+            $slug = $data['slug'] ? trim($data['slug']) : "";
             $menuType = $data['type'];
             $targetId = (int)($data['target_id'] ?? 0);
+            $targetUrl = ($data['target_url'] ?? "");
             $title = trim($data['title']);
 
-            $exists = DB::table('menus')
+            if(!$groupId){
+                if($targetId == 0 || $slug == ""){
+                    $_SESSION['flash_message'] = '필수값이 누락되었습니다.';
+                    $_SESSION['flash_type'] = 'error';
+                    return $response->withHeader('Location', $basePath . "/admin/menus/$groupId")->withStatus(302);
+                }
+            }
+
+            if($menuType != 'link') {
+                $exists = DB::table('menus')
                 ->where('group_id', $groupId)
                 ->where('slug', $slug)
                 ->exists();
 
-            if ($exists) {
-                $_SESSION['flash_message'] = '이미 사용 중인 주소입니다.';
-                $_SESSION['flash_type'] = 'error';
-                return $response->withHeader('Location', $basePath . "/admin/menus/$groupId")->withStatus(302);
-            }
+                if($targetId == 0 || $slug == ""){
+                    $_SESSION['flash_message'] = '필수값이 누락되었습니다.';
+                    $_SESSION['flash_type'] = 'error';
+                    return $response->withHeader('Location', $basePath . "/admin/menus/$groupId")->withStatus(302);
+                }
 
-            if (in_array($slug, ['admin', 'login', 'register', 'logout', 'au', 'page'])) {
-                $_SESSION['flash_message'] = '사용할 수 없는 주소입니다.';
-                $_SESSION['flash_type'] = 'error';
-                return $response->withHeader('Location', $basePath . "/admin/menus/$groupId")->withStatus(302);
+                if ($exists) {
+                    $_SESSION['flash_message'] = '이미 사용 중인 주소입니다.';
+                    $_SESSION['flash_type'] = 'error';
+                    return $response->withHeader('Location', $basePath . "/admin/menus/$groupId")->withStatus(302);
+                }
+
+                if (in_array($slug, ['admin', 'login', 'register', 'logout', 'au', 'page'])) {
+                    $_SESSION['flash_message'] = '사용할 수 없는 주소입니다.';
+                    $_SESSION['flash_type'] = 'error';
+                    return $response->withHeader('Location', $basePath . "/admin/menus/$groupId")->withStatus(302);
+                }
+            }else{
+                if (empty($targetUrl)) {
+                    $_SESSION['flash_message'] = '필수값이 누락되었습니다.';
+                    $_SESSION['flash_type'] = 'error';
+                    return $response->withHeader('Location', $basePath . "/admin/menus/$groupId")->withStatus(302);
+                }
+                $slug = "";
             }
 
             DB::table('menus')->insert([
                 'group_id' => $groupId,
                 'type' => $menuType,
                 'target_id' => $targetId,
+                'target_url' => $targetUrl,
                 'title' => $title,
                 'slug' => $slug,
                 'order_num' => 0

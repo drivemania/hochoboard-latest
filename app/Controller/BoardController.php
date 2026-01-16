@@ -167,7 +167,7 @@ class BoardController extends Model
                         return $response->withHeader('Location', $this->basePath . '/')->withStatus(302);
                     }
 
-                    if ($document->is_secret > 0 && $document->user_id != $_SESSION['user_idx'] && $_SESSION['user_idx'] < 10) {
+                    if ($document->is_secret > 0 && $document->user_id != $_SESSION['user_idx'] && $_SESSION['level'] < 10) {
                         $_SESSION['flash_message'] = "권한이 없습니다.";
                         $_SESSION['flash_type'] = 'error';
                         return $response->withHeader('Location', $this->basePath . '/')->withStatus(302);

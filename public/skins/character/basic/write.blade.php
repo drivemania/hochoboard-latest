@@ -6,6 +6,14 @@
 <script src="https://cdn.tailwindcss.com"></script>
 @endpush
 
+@php
+$cancelUrl = $_SERVER['HTTP_REFERER'];
+if($character){
+    $cancelUrl = "$currentUrl/$character->id";
+}
+
+@endphp
+
 <div class="max-w-2xl mx-auto bg-white p-6 rounded shadow border">
     <h2 class="text-xl font-bold mb-4 pb-2 border-b">
         {{ $mode === 'edit' ? '캐릭터 수정' : '새 캐릭터 생성' }}
@@ -126,7 +134,7 @@
     @endif
 
         <div class="flex justify-end space-x-2 border-t pt-4">
-            <a href="{{ $currentUrl }}/{{ $character->id }}" class="px-4 py-2 border rounded text-gray-600 hover:bg-gray-50">취소</a>
+            <a href="" class="px-4 py-2 border rounded text-gray-600 hover:bg-gray-50">취소</a>
             <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded font-bold hover:bg-blue-700">
                 {{ $mode === 'edit' ? '수정완료' : '생성완료' }}
             </button>

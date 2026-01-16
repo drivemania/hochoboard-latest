@@ -15,8 +15,20 @@ class SystemController {
 
     public function clearViewCache(Request $request, Response $response) {
         $cacheDir = __DIR__ . '/../../cache'; 
-        $this->emptyDir($cacheDir);
-        return $this->redirectBack($response, '뷰 캐시가 삭제되었습니다.');
+        if (is_dir($cacheDir)) {
+            $iterator = new \RecursiveIteratorIterator(
+                new \RecursiveDirectoryIterator($cacheDir, \RecursiveDirectoryIterator::SKIP_DOTS),
+                \RecursiveIteratorIterator::CHILD_FIRST
+            );
+    
+            foreach ($iterator as $file) {
+                if ($file->isFile() && strtolower($file->getExtension()) === 'php') {
+                    @unlink($file->getRealPath());
+                }
+            }
+        }
+    
+        return $this->redirectBack($response, '뷰 캐시(PHP 파일)가 삭제되었습니다.');
     }
 
     public function clearSession(Request $request, Response $response) {

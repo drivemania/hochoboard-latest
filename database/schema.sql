@@ -152,6 +152,7 @@ CREATE TABLE `__PREFIX__users` (
   `email` varchar(100) DEFAULT NULL,
   `birthdate` date DEFAULT NULL,
   `level` tinyint(3) unsigned DEFAULT 1,
+  `user_point` int(11) DEFAULT 0,
   `is_deleted` tinyint(1) DEFAULT 0,
   `deleted_at` timestamp NULL DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),

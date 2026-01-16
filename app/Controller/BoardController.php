@@ -922,9 +922,9 @@ class BoardController extends Model
         $after = \App\Support\Hook::filter('after_comment_save', $cmtId);
 
         if($isShort){
-            $this->returnUrl = $_SERVER['HTTP_REFERER'] ?? $this->basePath . '/';
+            $this->returnUrl = $_SERVER['HTTP_REFERER']."#comment_$cmtId" ?? $this->basePath . '/';
         }else{
-            $this->returnUrl = $_SERVER['HTTP_REFERER'] ?? $this->basePath . '/'; //혹시모르니까
+            $this->returnUrl = $_SERVER['HTTP_REFERER']."#comment_$cmtId" ?? $this->basePath . '/'; //혹시모르니까
         }
     
         DB::table('documents')->where('id', $docId)->increment('comment_count');
@@ -1216,8 +1216,8 @@ class BoardController extends Model
             if (isset($uploadedFiles[$fileInputName]) && $uploadedFiles[$fileInputName]->getError() === UPLOAD_ERR_OK) {
                 $file = $uploadedFiles[$fileInputName];
                 
-                $uploadDir = __DIR__ . '/../public/data/uploads/images';
-                if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
+                $uploadDir = __DIR__ . '/../../public/data/uploads/images';
+                if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, recursive: true);
                 
                 $filename = uniqid() . '_' . $file->getClientFilename();
                 $file->moveTo($uploadDir . '/' . $filename);
@@ -1247,6 +1247,7 @@ class BoardController extends Model
                 'group_id' => $menu->group_id,
                 'board_id' => $board->id,
                 'user_id' => $userId,
+                'doc_num' => $nextNum,
                 'nickname' => $nickname,
                 'title' => $title,
                 'content' => $content,

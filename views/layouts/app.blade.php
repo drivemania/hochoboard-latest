@@ -7,7 +7,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="{{ !empty($group->description) ? $group->description : "" }}">
+    <meta property="og:title" content="{{ $group->name }}">
+    <meta property="og:description" content="{{ !empty($group->description) ? $group->description : "" }}">
+    <meta property="og:image" content="{{ !empty($group->og_image) ? $base_path . '/public' . $group->og_image : "" }}">
     <title>@yield('title', $name)</title>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
     @if(!empty($group->favicon))

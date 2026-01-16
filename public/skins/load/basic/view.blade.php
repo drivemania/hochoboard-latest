@@ -32,6 +32,7 @@ if(!empty($document->user_id)){
             <button @click="writeModal = true" type="button" class="border border-gray-200 hover:border-gray-400 px-4 py-2 rounded-md transition-colors text-sm font-bold">업로드</button>
             <button type="button" onclick="window.open('{{ $base_path }}/emoticon', 'emoticon_pop', 'width=400,height=500,scrollbars=yes,resizable=no');"
             class="border border-gray-200 hover:border-gray-400 px-4 py-2 rounded-md transition-colors text-sm font-bold">이모티콘</button>
+            <button type="button" onclick="location.reload(true)" class="border border-gray-200 hover:border-gray-400 px-4 py-2 rounded-md transition-colors text-sm font-bold">새로고침</button>
 
         </div>
     </div>
@@ -106,7 +107,7 @@ if(!empty($document->user_id)){
                                 <div x-show="!isEditing">
                                     <div class="bg-white px-4 py-2 rounded-2xl rounded-tl-none border border-gray-200 shadow-sm inline-block max-w-full">
                                         <div class="flex justify-between items-baseline gap-4 mb-1">
-                                            <span class="font-bold text-sm text-gray-800">
+                                            <span id="comment_{{ $cmt->id }}" class="scroll-mt-24 target:bg-yellow-50 font-bold text-sm text-gray-800">
                                                 @if(!empty($cmt->char_id))
                                                 <a href="{{ $base_path }}/{{ $cmt->char_menu_slug }}/{{ $cmt->char_id }}" target="_blank">{{ $cmt->char_name }}</a>
                                                 @endif

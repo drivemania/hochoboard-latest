@@ -294,7 +294,7 @@ $app->group('/admin', function (RouteCollectorProxy $group) use ($blade, $basePa
             }
 
             if (!$isCustomMain) {
-                $useCustomMain = "";
+                $useCustomMain = 0;
             }
 
             $uploadDir = __DIR__ . '/../public/data';
@@ -386,7 +386,7 @@ $app->group('/admin', function (RouteCollectorProxy $group) use ($blade, $basePa
             $data = $request->getParsedBody();
             $id = $data['id'];
             $customFields = $data['custom_fields'] ?? [];
-            $notice = trim($data['notice']);
+            $notice = trim($data['notice'] ?? '');
 
             $cleanFields = [];
             if (is_array($customFields)) {

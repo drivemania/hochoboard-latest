@@ -48,7 +48,22 @@ class PluginHelper {
     public static function getPostMeta(string $pluginName, int $postId, string $key) {
         return self::get('document', $postId, $pluginName, $key);
     }
-        public static function saveUserMeta(string $pluginName, int $userId, string $key, $value) {
+    public static function saveUserMeta(string $pluginName, int $userId, string $key, $value) {
         self::save('user', $userId, $pluginName, $key, $value);
     }
+    public static function getUserInfo(string $userId) {
+        $user = DB::table('users')->select('user_id', 'nickname', 'level', 'email')
+            ->where('user_id', $userId)
+            ->where('is_deleted', 0)
+            ->first();
+        return $user;
+    }
+    public static function getCharacterInfo(string $charId) {
+        $user = DB::table('characters')->select('id', 'name', 'image_path', 'image_path2', 'description', 'profile_data', 'relationship', 'is_main')
+            ->where('id', $charId)
+            ->where('is_deleted', 0)
+            ->first();
+        return $user;
+    }
+    
 }

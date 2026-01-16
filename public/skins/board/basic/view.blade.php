@@ -6,6 +6,15 @@
 <script src="https://cdn.tailwindcss.com"></script>
 @endpush
 
+@php
+
+if(!empty($document->content)){
+    $document->content = str_replace('<ol>', '<ol class="list-decimal">', $document->content);
+    $document->content = str_replace('<ul>', '<ul class="list-disc">', $document->content);
+}
+
+@endphp
+
 <div class="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-sm border border-gray-200">
     
     <div class="border-b pb-4 mb-6">
@@ -40,7 +49,7 @@
         @if($board->use_editor)
             {!! $document->content !!}
         @else
-            {!! nl2br(e($document->content)) !!}
+            {!! nl2br($document->content) !!}
         @endif
     </div>
 
@@ -62,7 +71,7 @@
             <li x-data="{ editMode: false }" class="border-b border-gray-200 pb-2 last:border-0">
                 
                 <div class="flex justify-between items-center mb-1">
-                    <span class="font-bold text-sm text-gray-800">{{ $cmt->nickname }}</span>
+                    <span id="comment_{{ $cmt->id }}" class="scroll-mt-24 target:bg-yellow-50 font-bold text-sm text-gray-800">{{ $cmt->nickname }}</span>
                     <div class="flex items-center space-x-2">
                         <span class="text-xs text-gray-400">{{ date('m.d H:i', strtotime($cmt->created_at)) }}</span>
                         

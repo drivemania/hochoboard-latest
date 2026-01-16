@@ -411,11 +411,11 @@ $app->group('/admin', function (RouteCollectorProxy $group) use ($blade, $basePa
                 ->update([
                     'title' => trim($data['title']),
                     'notice' => $notice,
-                    'board_skin' => $data['board_skin'],
-                    'list_count' => (int)$data['list_count'],
-                    'read_level' => (int)$data['read_level'],
-                    'write_level' => (int)$data['write_level'],
-                    'comment_level' => (int)$data['comment_level'],
+                    'board_skin' => isset($data['board_skin']) ? $data['board_skin'] : "",
+                    'list_count' => isset($data['list_count']) ? (int)$data['list_count'] : 10,
+                    'read_level' => isset($data['read_level']) ? (int)$data['read_level'] : 1,
+                    'write_level' => isset($data['write_level']) ? (int)$data['write_level'] : 1,
+                    'comment_level' => isset($data['comment_level']) ? (int)$data['comment_level'] : 1,
                     'use_secret' => isset($data['use_secret']) ? 1 : 0,
                     'use_editor' => isset($data['use_editor']) ? 1 : 0,
                     'custom_fields' => $jsonFields

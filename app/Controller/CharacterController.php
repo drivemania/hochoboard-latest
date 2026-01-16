@@ -250,6 +250,7 @@ class CharacterController
         $data = $request->getParsedBody();
         $targetIdToUpdate = (int) $data['target_id'];
         $relationText = $data['relation_text'];
+        $relationFavor = (int) $data['favor'];
 
         $character = DB::table('characters')->find($id);
 
@@ -261,8 +262,9 @@ class CharacterController
 
         $currentRels = json_decode($character->relationship ?? '[]', true);
 
-        $newRels = array_map(function($rel) use ($targetIdToUpdate, $relationText) {
+        $newRels = array_map(function($rel) use ($targetIdToUpdate, $relationText, $relationFavor) {
             if ($rel['target_id'] == $targetIdToUpdate){
+                $rel['favor'] = $relationFavor;
                 $rel['text'] = cleanHtml($relationText);
             }
             return $rel;

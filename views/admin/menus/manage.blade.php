@@ -32,15 +32,15 @@
                                 </span>
                             @elseif($menu->type === 'load')
                                 <span class="text-xs bg-yellow-100 text-green-700 px-2 py-0.5 rounded">
-                                    🎨 로드비 게시판
+                                    🎨 로드비 게시판: {{ $menu->board_title }} (ID:{{ $menu->target_id }})
                                 </span>
                             @elseif($menu->type === 'character')
                                 <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">
-                                    🧙‍♂️ 캐릭터 게시판
+                                    🧙‍♂️ 캐릭터 게시판: {{ $menu->board_title }} (ID:{{ $menu->target_id }})
                                 </span>
                             @elseif($menu->type === 'page')
                                 <span class="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded">
-                                    📑 페이지
+                                    📑 페이지: {{ $menu->board_title }} (ID:{{ $menu->target_id }})
                                 </span>
                             @else
                                 <span class="text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded">

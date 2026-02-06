@@ -60,6 +60,8 @@ class AdminShopController {
             'effect_type' => $effectType,
             'effect_data' => $effectData,
             'is_sellable' => isset($data['is_sellable']) ? 1 : 0,
+            'is_binding' => isset($data['is_binding']) ? 1 : 0,
+            'is_permanent' => isset($data['is_permanent']) ? 1 : 0,
             'sell_price' => (int)$data['sell_price'],
         ];
 
@@ -140,7 +142,7 @@ class AdminShopController {
         $groupId = $data['group_id'];
         $targetType = $data['target_type'];
         $pointAmount = (int)($data['point_amount'] ?? 0);
-        $itemIds = $data['item_ids'] ?? [];
+        $itemsDict = $data['items'] ?? [];
         $reason = trim($data['reason']);
 
         if (empty($reason)) {
@@ -186,7 +188,8 @@ class AdminShopController {
         }
 
         $gaveItems = [];
-        if (!empty($itemIds)) {
+        if (!empty($itemsDict)) {
+            $itemIds = array_keys($itemsDict);
             $insertData = [];
             
             $gaveItems = DB::table('items')->whereIn('id', $itemIds)->select('id', 'name')->get()->toArray();
@@ -207,14 +210,19 @@ class AdminShopController {
             $insertData = [];
 
             foreach ($targets as $char) {
-                foreach ($itemIds as $itemId) {
+                foreach ($itemsDict as $itemId => $qty) {
+                    $qty = (int)$qty;
+                    if($qty < 1) continue;
+
                     if (isset($existingMap[$char->id][$itemId])) {
-                        $incrementIds[] = $existingMap[$char->id][$itemId];
+                        DB::table('character_items')
+                            ->where('id', $existingMap[$char->id][$itemId])
+                            ->increment('quantity', $qty);
                     } else {
                         $insertData[] = [
                             'character_id' => $char->id,
                             'item_id' => $itemId,
-                            'quantity' => 1
+                            'quantity' => $qty
                         ];
                     }
                 }
@@ -248,6 +256,165 @@ class AdminShopController {
         $_SESSION['flash_type'] = 'success';
         return $response->withHeader('Location', $_SERVER['HTTP_REFERER'])->withStatus(302);
     
+    }
+
+    public function shopList(Request $request, Response $response) {
+        $groups = DB::table('groups')->where('is_deleted', 0)->orderBy('created_at', 'desc')->get();
+        $shops = DB::table('shops')
+            ->leftJoin('groups', 'shops.group_id', '=', 'groups.id')
+            ->select('shops.*', 'groups.name as group_name', 'groups.slug as group_slug')
+            ->where('shops.is_deleted', 0)
+            ->orderBy('shops.id', 'desc')
+            ->get();
+
+        $content = $this->blade->render('admin.shops.index', [
+            'shops' => $shops,
+            'groups' => $groups
+        ]);
+        $response->getBody()->write($content);
+        return $response;
+    }
+
+    public function shopStore(Request $request, Response $response) {
+        $data = $request->getParsedBody();
+        $files = $request->getUploadedFiles();
+        
+        $npcPath = null;
+        if (isset($files['npc_image']) && $files['npc_image']->getError() === UPLOAD_ERR_OK) {
+            $uploadDir = __DIR__ . '/../../../public/data/uploads/npcs';
+            if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
+            $filename = uniqid() . '_' . $files['npc_image']->getClientFilename();
+            $files['npc_image']->moveTo($uploadDir . '/' . $filename);
+            $npcPath = '/public/data/uploads/npcs/' . $filename;
+        }
+
+        DB::table('shops')->insert([
+            'group_id' => $data['group_id'],
+            'name' => $data['name'],
+            'description' => $data['description'],
+            'npc_name' => $data['npc_name'],
+            'npc_image_path' => $npcPath,
+            'is_open' => isset($data['is_open']) ? $data['is_open'] : 0
+        ]);
+
+        $_SESSION['flash_message'] = "상점이 생성되었습니다.";
+        $_SESSION['flash_type'] = 'success';
+        return $response->withHeader('Location', $this->basePath . '/admin/shops')->withStatus(302);
+    }
+
+    public function shopEdit(Request $request, Response $response, $args) {
+        $id = $args['id'];
+        $shop = DB::table('shops')->find($id);
+
+        if (!$shop) {
+            $_SESSION['flash_message'] = '존재하지 않는 상점입니다.';
+            $_SESSION['flash_type'] = 'error';
+            return $response->withHeader('Location', $this->basePath . "/admin/shops")->withStatus(302);
+        }
+
+        $shopItems = DB::table('shop_items')
+            ->join('items', 'shop_items.item_id', '=', 'items.id')
+            ->where('shop_items.shop_id', $id)
+            ->select('shop_items.*', 'items.name', 'items.icon_path', 'items.is_binding')
+            ->orderBy('shop_items.display_order', 'asc')
+            ->get();
+
+        $groups = DB::table('groups')
+            ->where('id', $shop->group_id)
+            ->first();
+
+        $allItems = DB::table('items')->where('is_deleted', 0)->get();
+
+        $content = $this->blade->render('admin.shops.edit', [
+            'shop' => $shop,
+            'group' => $groups,
+            'shopItems' => $shopItems,
+            'allItems' => $allItems
+        ]);
+        $response->getBody()->write($content);
+        return $response;
+    }
+
+    public function shopUpdate(Request $request, Response $response) {
+        $data = $request->getParsedBody();
+        $files = $request->getUploadedFiles();
+
+        $updateList = [
+            'name' => $data['name'],
+            'description' => $data['description'],
+            'npc_name' => $data['npc_name'],
+            'is_open' => isset($data['is_open']) ? $data['is_open'] : 0
+        ];
+        
+        $npcPath = null;
+        if (isset($files['npc_image']) && $files['npc_image']->getError() === UPLOAD_ERR_OK) {
+            $uploadDir = __DIR__ . '/../../../public/data/uploads/npcs';
+            if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
+            $filename = uniqid() . '_' . $files['npc_image']->getClientFilename();
+            $files['npc_image']->moveTo($uploadDir . '/' . $filename);
+            $npcPath = '/public/data/uploads/npcs/' . $filename;
+            $updateList['npc_image_path'] = $npcPath;
+        }
+
+        DB::table('shops')
+            ->where('id', $data['id'])
+            ->update($updateList);
+
+        $_SESSION['flash_message'] = "설정이 변경되었습니다.";
+        $_SESSION['flash_type'] = 'success';
+        return $response->withHeader('Location', $this->basePath . '/admin/shops/' . $data['id'])->withStatus(302);
+    }
+
+    public function shopDelete(Request $request, Response $response) {
+        $data = $request->getParsedBody();
+        DB::table('shops')->where('id', $data['id'])->update([
+            'is_deleted' => 1,
+            'deleted_at' => date('Y-m-d H:i:s')
+        ]);
+
+        $_SESSION['flash_message'] = '삭제처리되었습니다.';
+        $_SESSION['flash_type'] = 'success';
+        return $response->withHeader('Location', $_SERVER['HTTP_REFERER'] ?? '/admin')->withStatus(302);
+    }
+
+    public function shopAddItem(Request $request, Response $response) {
+        $data = $request->getParsedBody();
+        
+        $exists = DB::table('shop_items')
+            ->where('shop_id', $data['shop_id'])
+            ->where('item_id', $data['item_id'])
+            ->exists();
+
+        if ($exists) {
+            $_SESSION['flash_message'] = '이미 등록된 아이템입니다.';
+            $_SESSION['flash_type'] = 'error';
+            return $response->withHeader('Location', $this->basePath . '/admin/shops/' . $data['shop_id'])->withStatus(302);
+        }
+
+        DB::table('shop_items')->insert([
+            'shop_id' => $data['shop_id'],
+            'item_id' => $data['item_id'],
+            'price' => (int)$data['price'],
+            'purchase_limit' => (int)$data['purchase_limit'],
+            'display_order' => 99 // 맨 뒤로
+        ]);
+
+        $_SESSION['flash_message'] = '아이템이 진열되었습니다.';
+        $_SESSION['flash_type'] = 'success';
+        return $response->withHeader('Location', $this->basePath . '/admin/shops/' . $data['shop_id'])->withStatus(302);
+    }
+
+    public function shopDeleteItem(Request $request, Response $response) {
+        $data = $request->getParsedBody();
+        $item = DB::table('shop_items')->find($data['shop_item_id']);
+        
+        if ($item) {
+            DB::table('shop_items')->delete($item->id);
+            $_SESSION['flash_message'] = '진열이 해제되었습니다.';
+            $_SESSION['flash_type'] = 'success';
+            return $response->withHeader('Location', $this->basePath . '/admin/shops/' . $item->shop_id)->withStatus(302);
+        }
+        return $response->withStatus(302)->withHeader('Location', $_SERVER['HTTP_REFERER']);
     }
 
 }

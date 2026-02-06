@@ -2,15 +2,11 @@
 
 @section('content')
 
-@push('styles')
-<script src="https://cdn.tailwindcss.com"></script>
-@endpush
-
 <div class="max-w-6xl mx-auto p-4">
     <div class="flex justify-between items-center mb-6 border-b pb-4">
-        <h2 class="text-2xl font-bold text-gray-800">캐릭터 명단</h2>
+        <h2 class="text-2xl font-bold text-neutral-800">캐릭터 명단</h2>
         @if(1==1)
-        <a href="{{ $currentUrl }}/write" class="bg-blue-600 text-white px-4 py-2 rounded font-bold hover:bg-blue-700">
+        <a href="{{ $currentUrl }}/write" class="bg-amber-600 text-white px-4 py-2 rounded font-bold hover:bg-amber-700">
             + 새 캐릭터 생성
         </a>
         @endif
@@ -22,13 +18,13 @@
             <div class="bg-white rounded-lg shadow border hover:shadow-md transition overflow-hidden relative" >
 
                 <div class="flex p-4">
-                    <div class="w-20 h-20 bg-gray-200 rounded-full flex-shrink-0 overflow-hidden mr-4 border-2 border-gray-100">
+                    <div class="w-20 h-20 bg-neutral-200 rounded-full flex-shrink-0 overflow-hidden mr-4 border-2 border-neutral-100">
                         <img src="{{ $char->image_path }}" class="w-full h-full object-cover">
                     </div>
                     
                     <div class="flex-1 overflow-hidden">
-                        <h3 class="font-bold text-lg text-gray-800 truncate">{{ $char->name }}</h3>
-                        <p class="text-sm text-gray-500 line-clamp-2 mb-2">{{ $char->nickname }}</p>
+                        <h3 class="font-bold text-lg text-neutral-800 truncate">{{ $char->name }}</h3>
+                        <p class="text-sm text-neutral-500 line-clamp-2 mb-2">{{ $char->nickname }}</p>
 
                     </div>
                 </div>
@@ -37,7 +33,7 @@
         @endforeach
 
         @if($characters->isEmpty())
-        <div class="col-span-full text-center py-10 text-gray-400">
+        <div class="col-span-full text-center py-10 text-neutral-400">
             생성된 캐릭터가 없습니다.
         </div>
         @endif

@@ -17,7 +17,7 @@ include __DIR__ . '/header.php';
         다시 설치하려면 <code class="bg-white px-1 rounded border">.env</code> 파일을 삭제하세요.
     </div>
 
-    <a href="<?php echo $basePath; ?>/" class="block w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold transition">
+    <a href="<?php echo $basePath; ?>/" class="block w-full py-3 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-bold transition">
         메인으로 이동하기
     </a>
 </div>

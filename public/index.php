@@ -115,7 +115,7 @@ $blade->compiler()->directive('hook', function ($expression) {
     return "<?php \App\Support\Hook::trigger($expression); ?>";
 });
 
-$errorMiddleware = $app->addErrorMiddleware(false, true, true);
+$errorMiddleware = $app->addErrorMiddleware(true, true, true);
 $errorMiddleware->setErrorHandler(
     HttpException::class,
     function (ServerRequestInterface $request, \Throwable $exception, bool $displayErrorDetails) use ($app, $blade) {

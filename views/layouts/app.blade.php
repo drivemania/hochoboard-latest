@@ -1,6 +1,6 @@
 @php
     $themeUrl = $base_path . '/public/themes/' . $group->theme; //css가져오실때....
-    $name = $group->name ?? 'HOCHOBOARD';
+    $name = $group->name ?? 'CUSTARD-BOARD';
 @endphp
 <!DOCTYPE html>
 <html lang="ko">
@@ -11,9 +11,10 @@
     <meta property="og:description" content="{{ !empty($group->description) ? $group->description : "" }}">
     <meta property="og:image" content="{{ !empty($group->og_image) ? $base_path . '/public' . $group->og_image : "" }}">
     <title>@yield('title', $name)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
     @if(!empty($group->favicon))
-    <link rel="icon" href="{{ $base_path }}/public{{ $group->favicon }}">
+    <link rel="icon" href="{{ $base_path }}{{ $group->favicon }}">
     @endif
     <style>
         body { font-family: 'Pretendard', sans-serif; }
@@ -47,6 +48,8 @@
         document.addEventListener('DOMContentLoaded', function() {
             @if(($group->use_notification ?? 1) == 0) return; @endif
 
+            const displayedIds = new Set();
+
             function checkNotifications() {
                 fetch('{{ $base_path }}/api/notifications/check')
                     .then(res => {
@@ -56,19 +59,32 @@
                     .then(data => {
                         if (data.notifications && data.notifications.length > 0) {
                             data.notifications.forEach(noti => {
-                                showBubble(noti);
+                                if (!displayedIds.has(noti.id)) {
+                                    showBubble(noti);
+                                    displayedIds.add(noti.id);
+                                }
                             });
                         }
                     })
+                    .catch(error => console.error("Notification Error:", error));
+            }
+
+            function markAsRead(id) {
+                fetch('{{ $base_path }}/api/notifications/read', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ id: id })
+                }).catch(err => console.error(err));
             }
 
             function showBubble(noti) {
                 const area = document.getElementById('hc-notification-area');
                 const bubble = document.createElement('div');
                 
-                bubble.className = "pointer-events-auto cursor-pointer relative flex items-center w-full bg-white border-2 border-indigo-500 text-gray-800 px-4 py-3 rounded-2xl shadow-xl mb-3 transition-all duration-300 opacity-0 -translate-y-4";
+                bubble.className = "pointer-events-auto cursor-pointer relative flex items-center w-full bg-white border-2 border-amber-500 text-gray-800 px-4 py-3 rounded-2xl shadow-xl mb-3 transition-all duration-300 opacity-0 -translate-y-4 pr-8"; // pr-8 추가 (닫기 버튼 공간 확보)
                 
-                let icon = ''; 
                 let iconHtml = '';
                 
                 if (noti.char_img) {
@@ -76,25 +92,45 @@
                                     <img src="${noti.char_img}" class="w-full h-full object-cover">
                                 </div>`;
                 } else {
-                    icon = '📩'; 
+                    let icon = '📩'; 
                     if(noti.type === 'comment') icon = '💬';
                     iconHtml = `<div class="mr-3 text-2xl">${icon}</div>`;
                 }
 
+                const closeBtnHtml = `
+                    <button type="button" class="close-btn absolute top-2 right-2 text-gray-400 hover:text-gray-600 p-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                `;
+
                 bubble.innerHTML = `
                     ${iconHtml}
                     <div class="flex-1 text-sm font-bold break-keep leading-tight">${noti.message}</div>
+                    ${closeBtnHtml}
                 `;
 
-                if (noti.url) {
-                    bubble.onclick = function() {
+                bubble.onclick = function(e) {
+                    markAsRead(noti.id);
+                    
+                    if (noti.url) {
                         if(noti.type === 'memo') {
                             window.open('{{ $base_path }}/memo', 'memo', 'width=650,height=700');
                         } else {
                             location.href = '{{ $base_path }}' + noti.url;
                         }
-                        removeBubble(bubble);
-                    };
+                    }
+                    removeBubble(bubble, noti.id);
+                };
+
+                const closeBtn = bubble.querySelector('.close-btn');
+                if(closeBtn) {
+                    closeBtn.onclick = function(e) {
+                        e.stopPropagation();
+                        markAsRead(noti.id);
+                        removeBubble(bubble, noti.id);
+                    }
                 }
 
                 area.appendChild(bubble);
@@ -102,13 +138,11 @@
                     bubble.classList.remove('opacity-0', '-translate-y-4');
                     bubble.classList.add('opacity-100', 'translate-y-0');
                 });
-
-                // setTimeout(() => {
-                //     removeBubble(bubble);
-                // }, 5000);
             }
 
-            function removeBubble(el) {
+            function removeBubble(el, id) {
+                if(id) displayedIds.delete(id);
+
                 el.classList.remove('opacity-100', 'translate-y-0');
                 el.classList.add('opacity-0', '-translate-y-4');
                 
@@ -118,6 +152,7 @@
             }
 
             @if(isset($_SESSION['user_idx']))
+                checkNotifications();
                 setInterval(checkNotifications, 5000);
             @endif
         });

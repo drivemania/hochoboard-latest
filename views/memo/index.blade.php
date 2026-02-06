@@ -35,7 +35,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
                 </svg>
             </button>
-            <h1 class="font-bold text-gray-800 text-lg">📪 쪽지함</h1>
+            <h1 class="font-bold text-gray-800 text-lg">쪽지함</h1>
         </div>
         <button onclick="window.close()" class="text-gray-400 hover:text-gray-600">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
@@ -61,14 +61,14 @@
             </div>
 
             <a href="{{ $base_path }}/memo/write" class="mx-4 mb-4 bg-blue-600 text-white text-center py-2 rounded hover:bg-blue-700 font-bold shadow-sm text-sm">
-                ✏️ 쪽지 쓰기
+                쪽지 쓰기
             </a>
             
             <a href="{{ $base_path }}/memo?type=recv" class="px-4 py-2 text-sm font-medium hover:bg-gray-50 {{ $type == 'recv' ? 'text-blue-600 bg-blue-50 border-r-2 border-blue-600' : 'text-gray-600' }}">
-                📥 받은 쪽지함
+                받은 쪽지함
             </a>
             <a href="{{ $base_path }}/memo?type=sent" class="px-4 py-2 text-sm font-medium hover:bg-gray-50 {{ $type == 'sent' ? 'text-blue-600 bg-blue-50 border-r-2 border-blue-600' : 'text-gray-600' }}">
-                📤 보낸 쪽지함
+                보낸 쪽지함
             </a>
         </nav>
 

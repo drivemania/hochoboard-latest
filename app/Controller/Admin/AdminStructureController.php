@@ -106,7 +106,7 @@ class AdminStructureController {
         }
 
         $exists = DB::table('groups')->where('slug', $slug)->exists();
-        if ($exists || in_array($slug, ['admin', 'login', 'register', 'logout', 'au', 'page', 'memo', 'plugin', 'comment'])) {
+        if ($exists || in_array($slug, ['admin', 'login', 'register', 'logout', 'au', 'page', 'memo', 'plugin', 'comment', 'shop'])) {
             $_SESSION['flash_message'] = '사용할 수 없는 그룹 ID입니다.';
             $_SESSION['flash_type'] = 'error';
             return $response->withHeader('Location', $this->basePath . '/admin/groups')->withStatus(302);
@@ -246,12 +246,18 @@ class AdminStructureController {
             ->orderBy('menus.order_num', 'asc')
             ->get();
 
+        $shops = DB::table('shops')
+            ->where('group_id', $groupId)
+            ->where('is_deleted', 0)
+            ->get();
+
         $allBoards = DB::table('boards')->where('is_deleted', 0)->get();
 
         $content = $this->blade->render('admin.menus.manage', [
             'title' => $group->name . ' 메뉴 구성',
             'group' => $group,
             'menus' => $menus,
+            'shops' => $shops,
             'allBoards' => $allBoards
         ]);
         $response->getBody()->write($content);
@@ -266,6 +272,7 @@ class AdminStructureController {
         $slug = $data['slug'] ? trim($data['slug']) : "";
         $menuType = $data['type'];
         $targetId = (int)($data['target_id'] ?? 0);
+        $shopId = (int)($data['shop_id'] ?? 0);
         $targetUrl = ($data['target_url'] ?? "");
         $title = trim($data['title']);
 
@@ -277,36 +284,50 @@ class AdminStructureController {
             }
         }
 
-        if($menuType != 'link') {
-            $exists = DB::table('menus')
-            ->where('group_id', $groupId)
-            ->where('slug', $slug)
-            ->exists();
-
-            if($targetId == 0 || $slug == ""){
-                $_SESSION['flash_message'] = '필수값이 누락되었습니다.';
-                $_SESSION['flash_type'] = 'error';
-                return $response->withHeader('Location', $this->basePath . "/admin/menus/$groupId")->withStatus(302);
+        switch ($menuType) {
+            case 'link' :{
+                if (empty($targetUrl)) {
+                    $_SESSION['flash_message'] = '필수값이 누락되었습니다.';
+                    $_SESSION['flash_type'] = 'error';
+                    return $response->withHeader('Location', $this->basePath . "/admin/menus/$groupId")->withStatus(302);
+                }
+                $slug = "";
+                break;
             }
-
-            if ($exists) {
-                $_SESSION['flash_message'] = '이미 사용 중인 주소입니다.';
-                $_SESSION['flash_type'] = 'error';
-                return $response->withHeader('Location', $this->basePath . "/admin/menus/$groupId")->withStatus(302);
+            case 'shop': {
+                if (empty($shopId)) {
+                    $_SESSION['flash_message'] = '필수값이 누락되었습니다.';
+                    $_SESSION['flash_type'] = 'error';
+                    return $response->withHeader('Location', $this->basePath . "/admin/menus/$groupId")->withStatus(302);
+                }
+                $targetId = $shopId;
+                $slug = "";
+                break;
             }
-
-            if (in_array($slug, ['admin', 'login', 'register', 'logout', 'au', 'page'])) {
-                $_SESSION['flash_message'] = '사용할 수 없는 주소입니다.';
-                $_SESSION['flash_type'] = 'error';
-                return $response->withHeader('Location', $this->basePath . "/admin/menus/$groupId")->withStatus(302);
+            default: {
+                $exists = DB::table('menus')
+                ->where('group_id', $groupId)
+                ->where('slug', $slug)
+                ->exists();
+    
+                if($targetId == 0 || $slug == ""){
+                    $_SESSION['flash_message'] = '필수값이 누락되었습니다.';
+                    $_SESSION['flash_type'] = 'error';
+                    return $response->withHeader('Location', $this->basePath . "/admin/menus/$groupId")->withStatus(302);
+                }
+    
+                if ($exists) {
+                    $_SESSION['flash_message'] = '이미 사용 중인 주소입니다.';
+                    $_SESSION['flash_type'] = 'error';
+                    return $response->withHeader('Location', $this->basePath . "/admin/menus/$groupId")->withStatus(302);
+                }
+    
+                if (in_array($slug, ['admin', 'login', 'register', 'logout', 'au', 'page', 'memo', 'plugin', 'comment', 'shop'])) {
+                    $_SESSION['flash_message'] = '사용할 수 없는 주소입니다.';
+                    $_SESSION['flash_type'] = 'error';
+                    return $response->withHeader('Location', $this->basePath . "/admin/menus/$groupId")->withStatus(302);
+                }
             }
-        }else{
-            if (empty($targetUrl)) {
-                $_SESSION['flash_message'] = '필수값이 누락되었습니다.';
-                $_SESSION['flash_type'] = 'error';
-                return $response->withHeader('Location', $this->basePath . "/admin/menus/$groupId")->withStatus(302);
-            }
-            $slug = "";
         }
 
         DB::table('menus')->insert([

@@ -7,13 +7,10 @@ $searchTarget = $_GET['search_target'] ?? "";
 $keyword = $_GET['keyword'] ?? "";
 @endphp
 
-@push('styles')
-<script src="https://cdn.tailwindcss.com"></script>
-@endpush
-<div class="max-w-5xl mx-auto px-4 py-8 relative">
+<div class="max-w-5xl mx-auto py-8 relative">
     @if($board->notice != null)
     <div class="space-y-8 mb-8">
-        <div class="px-5 py-4 flex justify-between items-center border border-gray-100 text-center">
+        <div class="px-5 py-4 flex justify-between items-center border border-neutral-100 text-center">
             <div class="w-full text-center">
                 {!! $board->notice !!}
             </div>
@@ -21,24 +18,24 @@ $keyword = $_GET['keyword'] ?? "";
     </div>
     @endif
     
-    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-8">
-        <h2 class="text-lg font-bold text-gray-800 mb-3 flex items-center">
+    <div class="bg-white rounded-xl shadow-sm border border-neutral-200 p-5 mb-8">
+        <h2 class="text-lg font-bold text-neutral-800 mb-3 flex items-center">
             {{ $board->title }}
         </h2>
         <form action="{{ $currentUrl }}/write" method="POST" class="relative">
             <input type="hidden" name="subject" value="방명록">
             <textarea name="content" 
-                      class="w-full h-24 p-4 bg-gray-50 border border-gray-200 rounded-lg resize-none focus:outline-none focus:bg-white focus:border-indigo-500 transition text-sm"
+                      class="w-full h-24 p-4 bg-neutral-50 border border-neutral-200 rounded-lg resize-none focus:outline-none focus:bg-white focus:border-amber-500 transition text-sm"
                       placeholder="내용을 입력해주세요..."></textarea>
             
             <div class="flex justify-between items-center mt-2">
                 @if($board->use_secret > 0)
-                <label class="flex items-center space-x-2 cursor-pointer text-sm text-gray-600 select-none">
-                    <input type="checkbox" name="is_secret" class="form-checkbox h-4 w-4 text-indigo-600 rounded border-gray-300">
+                <label class="flex items-center space-x-2 cursor-pointer text-sm text-neutral-600 select-none">
+                    <input type="checkbox" name="is_secret" class="form-checkbox h-4 w-4 text-amber-600 rounded border-neutral-300">
                     <span>🔒 비밀글로 남기기</span>
                 </label>
                 @endif
-                <button type="submit" class="px-6 py-2 bg-indigo-600 text-white text-sm font-bold rounded-lg hover:bg-indigo-700 transition shadow-sm">
+                <button type="submit" class="px-6 py-2 bg-amber-600 text-white text-sm font-bold rounded-lg hover:bg-amber-700 transition shadow-sm">
                     등록하기
                 </button>
             </div>
@@ -48,11 +45,11 @@ $keyword = $_GET['keyword'] ?? "";
     <div class="space-y-4">
         @forelse($documents as $doc)
         @if(!$doc->is_secret || $_SESSION['level'] === 10 || $doc->user_id === $_SESSION['user_idx'])
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+        <div class="bg-white rounded-xl shadow-sm border border-neutral-200 p-5">
             <div class="flex items-start justify-between">
                 <div class="flex items-start space-x-3 w-full">
                     
-                    <div class="flex-shrink-0 w-10 overflow-hidden h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500">
+                    <div class="flex-shrink-0 w-10 overflow-hidden h-10 rounded-full bg-neutral-200 flex items-center justify-center text-neutral-500">
                         @if (isset($doc->char_image))
                             <img src="{{ $doc->char_image }}" class="w-full h-full object-cover">
                         @else
@@ -62,16 +59,16 @@ $keyword = $_GET['keyword'] ?? "";
                     
                     <div class="w-full">
                         <div class="flex items-center justify-between mb-1">
-                            <span class="font-bold text-gray-800 text-sm">{{ $doc->nickname }} {{ $doc->is_secret ? '🔒' : '' }}</span>
-                            <span class="text-xs text-gray-400">{{ date('Y.m.d H:i', strtotime($doc->created_at)) }}</span>
+                            <span class="font-bold text-neutral-800 text-sm">{{ $doc->nickname }} {{ $doc->is_secret ? '🔒' : '' }}</span>
+                            <span class="text-xs text-neutral-400">{{ date('Y.m.d H:i', strtotime($doc->created_at)) }}</span>
                         </div>
-                        <p class="text-gray-700 text-sm leading-relaxed mb-2">
+                        <p class="text-neutral-700 text-sm leading-relaxed mb-2">
                             {!! nl2br(e($doc->content)) !!}
                         </p>
                         
                         <div class="flex items-center space-x-3">
                             @if(($_SESSION['level'] ?? 0) >= $board->comment_level)
-                            <button onclick="toggleReplyForm({{ $doc->id }})" class="text-xs text-indigo-600 font-semibold hover:underline flex items-center">
+                            <button onclick="toggleReplyForm({{ $doc->id }})" class="text-xs text-amber-600 font-semibold hover:underline flex items-center">
                                 <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path></svg>
                                 답글 달기
                             </button>
@@ -89,15 +86,15 @@ $keyword = $_GET['keyword'] ?? "";
 
             @if(isset($doc->comments) && count($doc->comments) > 0)
             @foreach($doc->comments as $cmt)
-                <div class="mt-4 ml-12 bg-indigo-50 rounded-lg p-4 relative border-l-4 border-indigo-200">
+                <div class="mt-4 ml-12 bg-amber-50 rounded-lg p-4 relative border-l-4 border-amber-200">
                     <div class="flex items-start">
-                        <div class="mr-3 mt-1 text-indigo-400">
+                        <div class="mr-3 mt-1 text-amber-400">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path></svg>
                         </div>
                         <div>
                             <div class="flex items-center space-x-2 mb-1">
-                                <span class="font-bold text-gray-800 text-sm">{{ $cmt->nickname }}</span>
-                                <span class="text-xs text-gray-400">{{ date('m.d H:i', strtotime($cmt->created_at)) }}</span>
+                                <span class="font-bold text-neutral-800 text-sm">{{ $cmt->nickname }}</span>
+                                <span class="text-xs text-neutral-400">{{ date('m.d H:i', strtotime($cmt->created_at)) }}</span>
                                 @if(($_SESSION['user_idx'] ?? 0) == $doc->user_id || $_SESSION['level'] === 10)
                                 <form action="{{ $base_path }}/comment/delete" method="POST" onsubmit="return confirm('정말 삭제하시겠습니까?');">
                                     <input type="hidden" name="comment_id" value="{{ $cmt->id }}">
@@ -106,7 +103,7 @@ $keyword = $_GET['keyword'] ?? "";
                                 </form>
                                 @endif
                             </div>
-                            <p class="text-gray-700 text-sm">
+                            <p class="text-neutral-700 text-sm">
                                 {!! nl2br($cmt->content) !!}
                             </p>
                         </div>
@@ -118,8 +115,8 @@ $keyword = $_GET['keyword'] ?? "";
             @if(($_SESSION['level'] ?? 0) >= $board->comment_level)
             <div id="reply-form-{{ $doc->id }}" class="hidden mt-4 ml-12 animate-fade-in-down">
                 <form action="{{ $currentUrl }}/{{ $doc->doc_num }}/comment" method="POST" class="flex items-start space-x-2">
-                    <textarea name="content" class="w-full h-20 p-3 bg-white border border-indigo-200 rounded focus:outline-none focus:border-indigo-500 text-sm resize-none" placeholder="답글 내용을 입력하세요..."></textarea>
-                    <button type="submit" class="h-20 w-16 bg-indigo-600 text-white rounded hover:bg-indigo-700 text-sm font-bold flex flex-col items-center justify-center">
+                    <textarea name="content" class="w-full h-20 p-3 bg-white border border-amber-200 rounded focus:outline-none focus:border-amber-500 text-sm resize-none" placeholder="답글 내용을 입력하세요..."></textarea>
+                    <button type="submit" class="h-20 w-16 bg-amber-600 text-white rounded hover:bg-amber-700 text-sm font-bold flex flex-col items-center justify-center">
                         <span>등록</span>
                     </button>
                 </form>
@@ -127,7 +124,7 @@ $keyword = $_GET['keyword'] ?? "";
             @endif
         </div>
         @else
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+        <div class="bg-white rounded-xl shadow-sm border border-neutral-200 p-5">
             <div class="flex items-start justify-between">
                 <div class="flex items-start space-x-3 w-full">
                     <div class="w-full text-center">
@@ -138,20 +135,30 @@ $keyword = $_GET['keyword'] ?? "";
         </div>
         @endif
         @empty
-        <div class="text-center py-20 bg-gray-50 rounded-2xl border border-gray-100">
-            <p class="text-gray-500 font-medium">등록된 글이 없습니다.</p>
+        <div class="text-center py-20 bg-neutral-50 rounded-2xl border border-neutral-100">
+            <p class="text-neutral-500 font-medium">등록된 글이 없습니다.</p>
         </div>
         @endforelse
     </div>
 
     @if($documents->lastPage() > 1)
     <div class="mt-6 flex justify-center space-x-1">
+        @if ($documents->onFirstPage())
+            <span class="px-3 py-1 text-neutral-400 bg-neutral-100 rounded text-xs"><</span>
+        @else
+            <a href="{{ $documents->previousPageUrl() }}" class="px-3 py-1 bg-white border text-neutral-600 rounded hover:bg-neutral-50 text-xs"><</a>
+        @endif
         @for($i = 1; $i <= $documents->lastPage(); $i++)
             <a href="?page={{ $i }}" 
-               class="px-3 py-1 rounded border {{ $documents->currentPage() == $i ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50' }}">
+               class="px-3 py-1 rounded border {{ $documents->currentPage() == $i ? 'bg-amber-600 text-white border-amber-600' : 'bg-white text-neutral-600 border-neutral-300 hover:bg-neutral-50' }}">
                {{ $i }}
             </a>
         @endfor
+        @if ($documents->hasMorePages())
+            <a href="{{ $documents->nextPageUrl() }}" class="px-3 py-1 bg-white border text-neutral-600 rounded hover:bg-neutral-50 text-xs">></a>
+        @else
+            <span class="px-3 py-1 text-neutral-400 bg-neutral-100 rounded text-xs">></span>
+        @endif
     </div>
     @endif
 </div>

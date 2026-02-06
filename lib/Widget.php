@@ -30,6 +30,8 @@ class Widget {
             if($m->type == 'link'){
                 $link = $m->target_url;
                 $a_target = 'target="_blank"';
+            }elseif($m->type == 'shop'){
+                $link = "{$basePath}/au/{$group->slug}/shop/{$m->target_id}"; 
             }else{
                 $link = "{$basePath}/au/{$group->slug}/{$m->slug}"; 
                 if($group->is_default === 1){
@@ -38,7 +40,17 @@ class Widget {
             }
 
             $currentUri = $_SERVER['REQUEST_URI'] ?? '';
-            $isActive = (strpos($currentUri, $m->slug) !== false && $m->type != 'link') ? ' active' : '';
+            $isActive = '';
+            if(strpos($currentUri, $m->slug) !== false){
+                if($m->type != 'link'){
+                    if($m->type != 'shop') {
+                        $isActive = ' active';
+                    }elseif($m->type == 'shop' && strpos($currentUri, $m->target_id)){
+                        $isActive = ' active';
+                    }
+                    
+                }
+            }
 
             $html .= '<li class="hc-menu-item' . $isActive . '">';
             $html .= '<a href="' . $link . '" class="hc-menu-link" '.$a_target.'>' . htmlspecialchars($m->title) . '</a>';
@@ -119,6 +131,7 @@ class Widget {
                 $html .= '<a href="' . $basePath . '/admin" class="hc-login-btn-admin" target="_blank">관리자</a>';
             }
             $html .= '<a href="' . $basePath . '/logout" class="hc-login-btn-logout">로그아웃</a>';
+            $html .= '<a href="' . $basePath . '/info" class="hc-login-btn-info">내 정보</a>';
             $html .= '</div>';
 
         } else {

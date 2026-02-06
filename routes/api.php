@@ -43,14 +43,25 @@ $app->get('/api/notifications/check', function (Request $request, Response $resp
         ->orderBy('notifications.id', 'asc')
         ->get();
 
-    if ($notis->count() > 0) {
-        $ids = $notis->pluck('id')->toArray();
-        DB::table('notifications')
-            ->whereIn('id', $ids)
-            ->update(['is_viewed' => 1]);
-    }
 
     $payload = json_encode(['notifications' => $notis]);
+    $response->getBody()->write($payload);
+    return $response->withHeader('Content-Type', 'application/json');
+});
+
+$app->post('/api/notifications/read', function (Request $request, Response $response,) {
+    if (!isset($_SESSION['user_idx'])) {
+        return $response->withStatus(401);
+    }
+
+    $data = json_decode($request->getBody(), true);
+    $ids = $data['id'];
+
+    DB::table('notifications')
+        ->where('id', $ids)
+        ->update(['is_viewed' => 1]);
+
+    $payload = json_encode(['success' => true]);
     $response->getBody()->write($payload);
     return $response->withHeader('Content-Type', 'application/json');
 });

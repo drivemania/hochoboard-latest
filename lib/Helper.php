@@ -24,6 +24,25 @@ class Helper {
     }
 
     /**
+     * 자동 앵커/호출 치환
+     * @param string $text 내용
+     */
+    public static function auto_summon($text, $currentUrl) {
+        if (preg_match_all('/\[\[(.*?)\]\]/', $text, $matches)) {
+            foreach ($matches[1] as $value) {
+                $text = str_replace("[[{$value}]]", "<span style=\"background-color:rgb(255, 242, 170); margin: auto 1px; padding: 0px 2px\">🔔<b>{$value}</b></span>", $text);
+            }
+        }
+        if (preg_match_all('/@(\d+)/', $text, $matches2)) {
+            foreach ($matches2[1] as $value) {
+                $replacement = '<a href="'.$currentUrl.'/$1" target="_blank" class="hc-hashtag">@$1</a>';
+                $text = preg_replace('/@(\d+)/', $replacement, $text);
+            }
+        }
+        return $text;
+    }
+
+    /**
      * 대표 캐릭터 가져오는 함수
      * @param string  $mid     멤버 고유 코드
      * @param string  $gid     그룹 고유 코드

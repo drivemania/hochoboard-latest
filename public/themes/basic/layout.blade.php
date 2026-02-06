@@ -3,7 +3,6 @@
 @section('theme_content')
 
 @push('styles')
-<script src="https://cdn.tailwindcss.com"></script>
 <link href="{{ $themeUrl }}/style.css?v={{ date("YmdHis") }}"  rel="stylesheet" type="text/css"></link>
 @endpush
 
@@ -13,8 +12,8 @@
     <header class="fixed top-0 w-full left-0 bg-white border-b border-gray-200 z-40">
         <div class="max-w-5xl mx-auto px-4 py-4 flex justify-between items-center">
             
-            <a href="{{ $mainUrl }}" class="text-xl font-bold text-indigo-600 relative shrink-0">
-                {{ $group->name ?? 'HOCHOBOARD' }}
+            <a href="{{ $mainUrl }}" class="text-xl font-bold text-amber-600 relative shrink-0">
+                {{ $group->name ?? 'CUSTARD-BOARD' }}
             </a>
 
             <div class="hidden md:flex items-center space-x-6 text-sm font-medium text-gray-500">
@@ -29,10 +28,10 @@
                         <span class="text-gray-800">{{ $_SESSION['nickname'] }}님</span>
                         <a href="{{ $base_path }}/logout" class="text-red-500 hover:text-red-700">로그아웃</a>
                     @else
-                        <a href="{{ $base_path }}/login" class="hover:text-indigo-600">로그인</a>
+                        <a href="{{ $base_path }}/login" class="hover:text-amber-600">로그인</a>
                     @endif
                 </nav>
-                <button @click="mobileMenuOpen = true" class="md:hidden text-gray-500 hover:text-indigo-600 focus:outline-none">
+                <button @click="mobileMenuOpen = true" class="md:hidden text-gray-500 hover:text-amber-600 focus:outline-none">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
                     </svg>
@@ -84,7 +83,7 @@
                         로그아웃
                     </a>
                 @else
-                    <a href="{{ $base_path }}/login" class="block w-full text-center py-3 bg-indigo-600 text-white rounded hover:bg-indigo-700 font-bold shadow-md">
+                    <a href="{{ $base_path }}/login" class="block w-full text-center py-3 bg-amber-600 text-white rounded hover:bg-amber-700 font-bold shadow-md">
                         로그인 / 회원가입
                     </a>
                 @endif

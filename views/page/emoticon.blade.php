@@ -35,14 +35,14 @@
             <div class="grid grid-cols-4 gap-2">
                 @foreach($emoticon as $emo)
                 <button onclick="copyEmoticon('{{ $emo->code }}')" 
-                        class="group flex flex-col items-center justify-center p-2 bg-white border border-gray-200 rounded-lg hover:border-indigo-400 hover:shadow-sm hover:bg-indigo-50 transition active:scale-95 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        class="group flex flex-col items-center justify-center p-2 bg-white border border-gray-200 rounded-lg hover:border-amber-400 hover:shadow-sm hover:bg-amber-50 transition active:scale-95 focus:outline-none focus:ring-2 focus:ring-amber-500"
                         title="{{ $emo->code }}">
                     
                     <div class="h-10 w-10 flex items-center justify-center mb-1">
                         <img src="{{ $base_path }}{{ $emo->image_path }}" alt="{{ $emo->code }}" class="max-w-full max-h-full object-contain pointer-events-none">
                     </div>
                     
-                    <span class="text-[10px] text-gray-400 group-hover:text-indigo-600 truncate max-w-full px-1 font-mono">
+                    <span class="text-[10px] text-gray-400 group-hover:text-amber-600 truncate max-w-full px-1 font-mono">
                         {{ $emo->code }}
                     </span>
                 </button>

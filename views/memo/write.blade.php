@@ -26,7 +26,7 @@
     @endif
 
     <div class="flex justify-between items-center mb-4">
-        <h2 class="font-bold text-lg text-gray-800">✉️ 쪽지 보내기</h2>
+        <h2 class="font-bold text-lg text-gray-800">쪽지 보내기</h2>
         <a href="{{ $base_path }}/memo" class="text-gray-500 text-sm hover:underline">취소</a>
     </div>
 
@@ -43,7 +43,7 @@
                        placeholder="상대방 아이디 입력" required readonly>
                     <p class="text-xs text-blue-600 mt-1">To. {{ $toUser->nickname }}님에게 답장</p>
                 @else
-                <select id="receiver_id" name="receiver_id" class="w-full text-sm border-gray-300 rounded focus:ring-indigo-500" required>
+                <select id="receiver_id" name="receiver_id" class="w-full text-sm border-gray-300 rounded focus:ring-amber-500" required>
                     @foreach($receiverId as $rec)
                         <option value="{{ $rec->user_id }}">{{ $rec->user_id }}({{ $rec->nickname }})</option>
                     @endforeach
@@ -58,7 +58,7 @@
 
             <div>
                 <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 shadow-md transition">
-                    전송하기 🚀
+                    전송하기
                 </button>
             </div>
         </div>

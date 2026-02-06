@@ -13,7 +13,7 @@
     font-size: 16px;
 }
 .hc-menu-link:hover, .hc-menu-item.active .hc-menu-link {
-    color: #2563EB;      /* 호버/활성 색상 (파랑) */
+    color: #ebac25;      /* 호버/활성 색상 (파랑) */
 }
 
 @media (max-width: 48rem) {
@@ -54,7 +54,7 @@
 
 /* 로그인 상태 */
 .hc-login-info { margin-bottom: 10px; text-align: center;}
-.hc-login-nickname { font-weight: bold; color: #2563EB; }
+.hc-login-nickname { font-weight: bold; color: #ebac25; }
 .hc-login-actions a {
     margin-right: 8px;
     text-decoration: none;
@@ -85,14 +85,14 @@
 .hc-login-btn-submit {
     width: 100%;
     padding: 8px;
-    background-color: #2563EB;
+    background-color: #ebac25;
     color: white;
     border: none;
     border-radius: 4px;
     font-weight: bold;
     cursor: pointer;
 }
-.hc-login-btn-submit:hover { background-color: #1d4ed8; }
+.hc-login-btn-submit:hover { background-color: #d89d1d; }
 .hc-login-links {
     margin-top: 10px;
     text-align: center;
@@ -126,7 +126,7 @@
 /* 버튼 그룹 */
 .hc-login-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
 .hc-login-btn-admin { grid-column: span 2; background: #333; color: #fff; text-align: center; padding: 5px; border-radius: 4px; font-size: 12px; }
-.hc-login-btn-logout, .hc-login-btn-info { grid-column: span 2; border: 1px solid #ddd; color: #666; text-align: center; padding: 5px; border-radius: 4px; font-size: 12px; }
+.hc-login-btn-logout, .hc-login-btn-info { grid-column: span 1; border: 1px solid #ddd; color: #666; text-align: center; padding: 5px; border-radius: 4px; font-size: 12px; }
 
 .hc-latest-widget {
     background: #fff;

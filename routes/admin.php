@@ -35,6 +35,8 @@ $app->group('/admin', function (RouteCollectorProxy $group) use (
     $group->get('', [$adminHomeController, 'index']);
 
     $group->post('/issecret', [$adminHomeController, 'issecret']);
+    
+    $group->post('/ismemouse', [$adminHomeController, 'ismemouse']);
 
     $group->group('/system', function ($group)  use ($basePath) {
         $systemController = new \App\Controller\SystemController($basePath);
@@ -91,6 +93,8 @@ $app->group('/admin', function (RouteCollectorProxy $group) use (
         $group->post('/update', [$adminUserController, 'userUpdate']);
 
         $group->post('/delete', [$adminUserController, 'userDelete']);
+        
+        $group->post('/deleteList', [$adminUserController, 'userDeleteList']);
     });
     $group->group('/profiles', function (RouteCollectorProxy $group) use ($adminCharacterController) {
 
@@ -144,6 +148,16 @@ $app->group('/admin', function (RouteCollectorProxy $group) use (
 
         $group->post('/distribute', [$adminShopController, 'settlementDist']);
 
+    });
+    $group->group('/shops', function ($group) use ($adminShopController) {
+        $group->get('', [$adminShopController, 'shopList']);
+        $group->post('', [$adminShopController, 'shopStore']);
+        $group->get('/{id}', [$adminShopController, 'shopEdit']);
+        $group->post('/update', [$adminShopController, 'shopUpdate']);
+        $group->post('/delete', [$adminShopController, 'shopDelete']);
+        
+        $group->post('/items/add', [$adminShopController, 'shopAddItem']);
+        $group->post('/items/delete', [$adminShopController, 'shopDeleteItem']);
     });
 
 

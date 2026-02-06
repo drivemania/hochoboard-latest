@@ -8,14 +8,14 @@ include __DIR__ . '/header.php';
 
 <div class="bg-white border border-gray-200 rounded-lg p-4 h-64 overflow-y-auto mb-6 text-sm text-gray-600 leading-relaxed shadow-inner">
     <div class="space-y-4 text-gray-700">
-        <h3 class="text-lg font-bold text-gray-900">HOCHOBOARD 소프트웨어 사용권 계약</h3>
+        <h3 class="text-lg font-bold text-gray-900">CUSTARD-BOARD 소프트웨어 사용권 계약</h3>
         <p class="text-xs text-gray-500 pb-2 border-b border-gray-200">
             본 소프트웨어를 설치하거나 사용하는 것은 아래의 약관에 동의하는 것으로 간주됩니다.
         </p>
 
         <h4 class="font-bold text-gray-800 mt-4">제 1 조 (정의 및 목적)</h4>
         <p>
-            <strong>HOCHOBOARD</strong>(이하 "소프트웨어")는 사용자의 웹사이트 구축 및 운영을 돕기 위해 제작된 오픈소스 콘텐츠 관리 시스템(CMS)입니다. 
+            <strong>CUSTARD-BOARD</strong>(이하 "소프트웨어")는 사용자의 웹사이트 구축 및 운영을 돕기 위해 제작된 오픈소스 콘텐츠 관리 시스템(CMS)입니다. 
             본 소프트웨어는 <strong>GNU 일반 공중 사용 허가서(GNU General Public License, 이하 GPL) 버전 3</strong>에 따라 배포됩니다.
         </p>
 
@@ -51,18 +51,18 @@ include __DIR__ . '/header.php';
         <h4 class="font-bold text-gray-800 mt-4">제 6 조 (라이선스 전문)</h4>
         <p>
             본 약관에서 명시하지 않은 사항은 GNU GPL v3의 영문 원문을 따릅니다. 
-            라이선스 전문은 <a href="https://www.gnu.org/licenses/gpl-3.0.html" target="_blank" class="text-indigo-600 underline">https://www.gnu.org/licenses/gpl-3.0.html</a>에서 확인할 수 있습니다.
+            라이선스 전문은 <a href="https://www.gnu.org/licenses/gpl-3.0.html" target="_blank" class="text-amber-600 underline">https://www.gnu.org/licenses/gpl-3.0.html</a>에서 확인할 수 있습니다.
         </p>
 
         <br>
         <p class="text-sm text-gray-500 text-center">
-            Copyright © 2026 HOCHOBOARD Development LH커뮤공사. All rights reserved.
+            Copyright © 2026 CUSTARD-BOARD Development LH커뮤공사. All rights reserved.
         </p>
     </div>
 </div>
 
-<div class="flex items-center mb-8 p-4 bg-indigo-50 rounded-lg border border-indigo-100">
-    <input id="agree_check" type="checkbox" class="w-5 h-5 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500 cursor-pointer">
+<div class="flex items-center mb-8 p-4 bg-amber-50 rounded-lg border border-amber-100">
+    <input id="agree_check" type="checkbox" class="w-5 h-5 text-amber-600 rounded border-gray-300 focus:ring-amber-500 cursor-pointer">
     <label for="agree_check" class="ml-3 text-sm font-bold text-gray-700 cursor-pointer select-none">
         위 라이선스 내용을 모두 읽었으며, 이에 동의합니다.
     </label>
@@ -83,10 +83,10 @@ include __DIR__ . '/header.php';
     check.addEventListener('change', function() {
         if (this.checked) {
             btn.classList.remove('bg-gray-300', 'text-gray-500', 'pointer-events-none', 'shadow-none');
-            btn.classList.add('bg-indigo-600', 'text-white', 'hover:bg-indigo-700', 'shadow');
+            btn.classList.add('bg-amber-600', 'text-white', 'hover:bg-amber-700', 'shadow');
         } else {
             btn.classList.add('bg-gray-300', 'text-gray-500', 'pointer-events-none', 'shadow-none');
-            btn.classList.remove('bg-indigo-600', 'text-white', 'hover:bg-indigo-700', 'shadow');
+            btn.classList.remove('bg-amber-600', 'text-white', 'hover:bg-amber-700', 'shadow');
         }
     });
 </script>

@@ -6,31 +6,31 @@
 <div x-data="characterManager()">
     <div class="bg-white p-4 rounded-lg shadow-sm mb-6 flex justify-between items-center">
         <div class="flex items-center space-x-3">
-            <div class="text-sm text-gray-500">
+            <div class="text-sm text-neutral-500">
                 총 <b>{{ $characters->total() }}</b>명
             </div>
             
             <button type="button" 
                 x-show="selectedIds.length > 0" 
                 @click="openBulkMoveModal()"
-                class="bg-indigo-600 text-white px-4 py-2 rounded text-sm font-bold hover:bg-indigo-700 transition"
+                class="bg-amber-500 text-white px-4 py-2 rounded text-sm font-bold hover:bg-amber-700 transition"
                 style="display: none;">
                 <span x-text="selectedIds.length"></span>명 일괄 이동
             </button>
         </div>
 
         <form method="GET" class="flex space-x-2">
-            <input type="text" name="search" value="{{ $search }}" placeholder="캐릭터명 또는 오너명" class="border rounded px-3 py-2 text-sm outline-none focus:border-blue-500 w-64">
-            <button type="submit" class="bg-gray-800 text-white px-4 py-2 rounded text-sm font-bold hover:bg-black">검색</button>
+            <input type="text" name="search" value="{{ $search }}" placeholder="캐릭터명 또는 오너명" class="border rounded px-3 py-2 text-sm outline-none focus:border-amber-400 w-64">
+            <button type="submit" class="bg-neutral-800 text-white px-4 py-2 rounded text-sm font-bold hover:bg-black">검색</button>
         </form>
     </div>
 
     <div class="bg-white rounded-lg shadow overflow-x-auto">
         <table class="w-full text-left border-collapse">
             <thead>
-                <tr class="bg-gray-50 border-b text-gray-600 text-sm uppercase">
+                <tr class="bg-neutral-50 border-b text-neutral-600 text-sm uppercase">
                     <th class="px-6 py-3 w-10">
-                        <input type="checkbox" @change="toggleAll($event)" class="w-4 h-4 rounded text-blue-600">
+                        <input type="checkbox" @change="toggleAll($event)" class="w-4 h-4 rounded text-amber-500">
                     </th>
                     <th class="px-6 py-3">ID</th>
                     <th class="px-6 py-3">이미지</th>
@@ -40,32 +40,32 @@
                     <th class="px-6 py-3 text-right">관리</th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-gray-200 text-sm">
+            <tbody class="divide-y divide-neutral-200 text-sm">
                 @foreach($characters as $char)
-                <tr class="hover:bg-gray-50 transition">
+                <tr class="hover:bg-neutral-50 transition">
                     <td class="px-6 py-4">
-                        <input type="checkbox" value="{{ $char->id }}_{{ $char->group_id }}" x-model="selectedItems" class="w-4 h-4 rounded text-blue-600">
+                        <input type="checkbox" value="{{ $char->id }}_{{ $char->group_id }}" x-model="selectedItems" class="w-4 h-4 rounded text-amber-500">
                     </td>
-                    <td class="px-6 py-4 text-gray-400">{{ $char->id }}</td>
+                    <td class="px-6 py-4 text-neutral-400">{{ $char->id }}</td>
                     <td class="px-6 py-4">
-                        <div class="w-10 h-10 rounded-full bg-gray-200 overflow-hidden border">
+                        <div class="w-10 h-10 rounded-full bg-neutral-200 overflow-hidden border">
                             <img src="{{ $char->image_path ?? 'https://via.placeholder.com/50' }}" class="w-full h-full object-cover">
                         </div>
                     </td>
                     <td class="px-6 py-4">
-                        <div class="font-bold text-gray-800">{{ $char->name }}</div>
-                        <div class="text-xs text-gray-500">오너: {{ $char->owner_name }}</div>
+                        <div class="font-bold text-neutral-800">{{ $char->name }}</div>
+                        <div class="text-xs text-neutral-500">오너: {{ $char->owner_name }}</div>
                     </td>
                     <td class="px-6 py-4">
-                        <span class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs">{{ $char->group_name }}</span>
+                        <span class="bg-neutral-100 text-neutral-600 px-2 py-1 rounded text-xs">{{ $char->group_name }}</span>
                     </td>
-                    <td class="px-6 py-4 text-blue-600 font-medium">
+                    <td class="px-6 py-4 text-amber-500 font-medium">
                         {{ $char->board_title ?? '(미지정)' }}
                     </td>
                     <td class="px-6 py-4 text-right">
                         <button type="button" 
                             @click="openMoveModal({{ $char->id }}, {{ $char->group_id }}, '{{ $char->name }}')"
-                            class="bg-white border border-gray-300 text-gray-700 px-3 py-1 rounded hover:bg-gray-50 text-xs font-bold">
+                            class="bg-white border border-neutral-300 text-neutral-700 px-3 py-1 rounded hover:bg-neutral-50 text-xs font-bold">
                             개별 이동
                         </button>
                     </td>
@@ -85,7 +85,7 @@
         <div class="bg-white rounded-lg shadow-lg w-96 p-6" @click.away="closeModal()">
             <h3 class="text-lg font-bold mb-4 border-b pb-2">🚚 캐릭터 이동</h3>
             
-            <p class="text-sm text-gray-600 mb-4">
+            <p class="text-sm text-neutral-600 mb-4">
                 <span x-html="targetDisplayName"></span>
                 <br>이동시킬 게시판을 선택하세요.
             </p>
@@ -94,7 +94,7 @@
                 <input type="hidden" name="char_ids" x-model="targetCharIds">
                 
                 <div class="mb-4">
-                    <label class="block text-xs font-bold text-gray-500 mb-1">이동 대상 게시판</label>
+                    <label class="block text-xs font-bold text-neutral-500 mb-1">이동 대상 게시판</label>
                     <select name="target_board_id" class="w-full border rounded px-3 py-2 bg-white" required>
                         <option value="">선택하세요</option>
                         <template x-for="board in boards" :key="board.id">
@@ -104,8 +104,8 @@
                 </div>
 
                 <div class="flex justify-end space-x-2">
-                    <button type="button" @click="closeModal()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 font-bold text-sm">취소</button>
-                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 font-bold text-sm">이동확인</button>
+                    <button type="button" @click="closeModal()" class="px-4 py-2 bg-neutral-200 text-neutral-700 rounded hover:bg-neutral-300 font-bold text-sm">취소</button>
+                    <button type="submit" class="px-4 py-2 bg-amber-500 text-white rounded hover:bg-amber-700 font-bold text-sm">이동확인</button>
                 </div>
             </form>
         </div>

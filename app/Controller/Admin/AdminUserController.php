@@ -20,14 +20,19 @@ class AdminUserController {
 
     public function userList(Request $request, Response $response) {
         $page = $_GET['page'] ?? 1;
-            
+
+        $sort = $_GET['sort'] ?? 'created_at'; // 기본값 created_at
+        $order = $_GET['order'] ?? 'desc';     // 기본값 desc
+
         $users = DB::table('users')
-            ->orderBy('created_at', 'desc')
+            ->orderBy($sort, $order)
             ->paginate(15, ['*'], 'page', $page);
 
         $content = $this->blade->render('admin.users.index', [
             'title' => '회원 관리',
-            'users' => $users
+            'users' => $users,
+            'sort'  => $sort,
+            'order' => $order,
         ]);
         $response->getBody()->write($content);
         return $response;
@@ -92,6 +97,28 @@ class AdminUserController {
         ]);
 
         $_SESSION['flash_message'] = '회원이 삭제되었습니다.';
+        $_SESSION['flash_type'] = 'success';
+        return $response->withHeader('Location', $this->basePath . '/admin/users')->withStatus(302);
+    }
+
+    public function userDeleteList(Request $request, Response $response) {
+        $data = $request->getParsedBody();
+        $id = $data['ids']; //array
+
+        if (in_array($_SESSION['user_idx'], $id)) {
+            $_SESSION['flash_message'] = '자기 자신을 삭제할 수는 없습니다.';
+            $_SESSION['flash_type'] = 'error';
+            return $response->withHeader('Location', $this->basePath . '/admin/users')->withStatus(302);
+        }
+
+        DB::table('users')
+        ->whereIn('id', $id)
+        ->update([
+            'is_deleted' => 1,
+            'deleted_at' => date('Y-m-d H:i:s')
+        ]);
+
+        $_SESSION['flash_message'] = '선택한 회원이 삭제되었습니다.';
         $_SESSION['flash_type'] = 'success';
         return $response->withHeader('Location', $this->basePath . '/admin/users')->withStatus(302);
     }

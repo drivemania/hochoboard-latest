@@ -6,7 +6,7 @@ $allPassed = true;
 ?>
 
 <h2 class="text-xl font-bold text-gray-800 mb-2">서버 환경 점검</h2>
-<p class="text-sm text-gray-500 mb-6">호쵸보드를 설치해주셔서 감사합니다!<BR>설치를 위해 서버 환경을 확인할게요.</p>
+<p class="text-sm text-gray-500 mb-6">커스터드보드를 설치해주셔서 감사합니다!<BR>설치를 위해 서버 환경을 확인할게요.</p>
 
 <div class="space-y-3 mb-8">
 <?php foreach ($reqs as $name => $pass): ?>
@@ -30,7 +30,7 @@ $allPassed = true;
 
 <div class="flex justify-end">
     <?php if ($allPassed): ?>
-        <a href="<?php echo $basePath; ?>/step2" class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold transition">
+        <a href="<?php echo $basePath; ?>/step2" class="px-6 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-bold transition">
             다음 단계로 >
         </a>
     <?php else: ?>

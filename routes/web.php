@@ -3,14 +3,30 @@ use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Illuminate\Database\Capsule\Manager as DB;
 
+use App\Controller\BoardController;
+use App\Controller\CharacterController;
+use App\Controller\ShopController;
+use App\Controller\PluginDispatcherController;
+use App\Controller\MemberController;
+use App\Controller\MemoController;
+use App\Controller\CommentController;
+
+use App\Middleware\SecretCheckMiddleware;
+use App\Middleware\MemoCheckMiddleware;
+
+
 $basePath = $app->getBasePath();
 
-$boardController = new \App\Controller\BoardController($blade, $basePath);
-$characterController = new \App\Controller\CharacterController($blade, $basePath);
-$shopController = new \App\Controller\ShopController($blade, $basePath);
-$pluginDispatcherController = new \App\Controller\PluginDispatcherController();
+$boardController = new BoardController($blade, $basePath);
+$characterController = new CharacterController($blade, $basePath);
+$shopController = new ShopController($blade, $basePath);
+$memberController = new MemberController($blade, $basePath);
+$memoController = new MemoController($blade, $basePath);
+$commentController = new CommentController($blade, $basePath);
+$pluginDispatcherController = new PluginDispatcherController();
 
-$secretCheckMiddleware = new \App\Middleware\SecretCheckMiddleware($basePath);
+$secretCheckMiddleware = new SecretCheckMiddleware($basePath);
+$memoCheckMiddleware = new MemoCheckMiddleware($basePath);
 
 // [공통 함수] HTML Purifier (XSS 방지 필터)
 function cleanHtml($html) {
@@ -69,6 +85,12 @@ $app->get('/', function (Request $request, Response $response) use ($blade, $bas
     return $response;
 })->add($secretCheckMiddleware);
 
+//내정보
+$app->group('/info', function ($group) use ($memberController) {
+    $group->get('', [$memberController, 'index']); // 내 정보 메인
+    $group->post('/password', [$memberController, 'updatePassword']); // 비밀번호 변경 처리
+});
+
 $app->post('/image/upload', function (Request $request, Response $response) use ($basePath) {
     $files = $request->getUploadedFiles();
     
@@ -98,151 +120,22 @@ $app->post('/image/upload', function (Request $request, Response $response) use 
 });
 
 //메모 처리부
-$app->group('/memo', function ($group) use ($blade, $basePath) {
+$app->group('/memo', function ($group) use ($memoController) {
 
-    $group->get('', function (Request $request, Response $response) use ($blade) {
-        if (!isset($_SESSION['user_idx'])) return $response->withStatus(403);
-
-        $type = $_GET['type'] ?? 'recv';
-        $page = $_GET['page'] ?? 1;
-
-        $query = DB::table('messages');
-
-        if ($type === 'sent') {
-            $query->where('sender_id', $_SESSION['user_idx'])
-                  ->where('is_deleted_sender', 0);
-        } else {
-            $query->where('receiver_id', $_SESSION['user_idx'])
-                  ->where('is_deleted_receiver', 0);
-        }
-
-        $messages = $query->orderBy('id', 'desc')->paginate(15, ['*'], 'page', $page);
-
-        $content = $blade->render('memo.index', [
-            'type' => $type,
-            'messages' => $messages
-        ]);
-        $response->getBody()->write($content);
-        return $response;
-    });
+    $group->get('', [$memoController, 'index']);
 
     // 쪽지 읽기 (읽음 처리)
-    $group->get('/view/{id}', function (Request $request, Response $response, $args) use ($blade) {
-        $id = $args['id'];
-        $myId = $_SESSION['user_idx'];
-
-        $msg = DB::table('messages')->find($id);
-        if (!$msg) {
-            $_SESSION['flash_message'] = "페이지를 찾을 수 없습니다.";
-            $_SESSION['flash_type'] = 'error';
-            return $response->withHeader('Location', '/')->withStatus(302);
-        };
-
-        if ($msg->sender_id != $myId && $msg->receiver_id != $myId) {
-            $response->getBody()->write("권한이 없습니다.");
-            return $response;
-        }
-
-        if ($msg->receiver_id == $myId && $msg->read_at == null) {
-            DB::table('messages')
-                ->where('id', $id)
-                ->update(['read_at' => date('Y-m-d H:i:s')]);
-        }
-
-        $content = $blade->render('memo.view', ['msg' => $msg]);
-        $response->getBody()->write($content);
-        return $response;
-    });
+    $group->get('/view/{id}', [$memoController, 'view']);
 
     // 쪽지 쓰기 폼
-    $group->get('/write', function (Request $request, Response $response) use ($blade) {
-        $toId = $_GET['to_id'] ?? '';
-        $toUser = null;
-        if($toId) {
-            $toUser = DB::table('users')->find($toId);
-        }
-
-        $sendUserList = DB::table('users')->where('is_deleted', '=', 0)->get();
-
-        $content = $blade->render('memo.write', ['toUser' => $toUser, 'receiverId' => $sendUserList]);
-        $response->getBody()->write($content);
-        return $response;
-    });
+    $group->get('/write', [$memoController, 'write']);
 
     // 쪽지 발송
-    $group->post('/send', function (Request $request, Response $response) use ($basePath) {
-        $data = $request->getParsedBody();
-        $receiverId = trim($data['receiver_id']);
-        $content = trim($data['content']);
+    $group->post('/send', [$memoController, 'send']);
 
-        $receiver = DB::table('users')->where('user_id', $receiverId)->first();
-        if (!$receiver) {
-            $_SESSION['flash_message'] = '존재하지 않는 사용자입니다.';
-            $_SESSION['flash_type'] = 'error';
-            return $response->withHeader('Location', $basePath."/memo/write")->withStatus(302);
-        }
-
-        DB::table('messages')->insert([
-            'sender_id' => $_SESSION['user_idx'],
-            'sender_nickname' => $_SESSION['nickname'],
-            'receiver_id' => $receiver->id,
-            'content' => $content,
-            'created_at' => date('Y-m-d H:i:s')
-        ]);
-
-        $group = DB::table('groups')->where('is_default', 1)->first();
-        $currentGroupId = $group->id ?? 0;
-
-        DB::table('notifications')->insert([
-            'group_id' => $currentGroupId,
-            'user_id' => $receiver->id,
-            'sender_id' => $_SESSION['user_idx'],
-            'type' => 'memo',
-            'message' => $_SESSION['nickname'] . '님이 쪽지를 보냈습니다.',
-            'url' => '/memo/view',
-            'is_viewed' => 0,
-            'created_at' => date('Y-m-d H:i:s')
-        ]);
-
-        $_SESSION['flash_message'] = '쪽지를 보냈습니다.';
-        $_SESSION['flash_type'] = 'success';
-        return $response->withHeader('Location', $basePath."/memo")->withStatus(302);
-    });
-
-    $group->post('/delete', function (Request $request, Response $response) use ($basePath) {
-        $data = $request->getParsedBody();
-        $id = trim($data['id']);
-        $myId = $_SESSION['user_idx'];
-
-        $msg = DB::table('messages')->find($id);
-        if (!$msg) {
-            $_SESSION['flash_message'] = "페이지를 찾을 수 없습니다.";
-            $_SESSION['flash_type'] = 'error';
-            return $response->withHeader('Location', '/')->withStatus(302);
-        };
-
-        if ($msg->sender_id != $myId && $msg->receiver_id != $myId) {
-            $response->getBody()->write("권한이 없습니다.");
-            return $response;
-        }
-
-        if ($msg->receiver_id == $myId) {
-            DB::table('messages')
-                ->where('id', $id)
-                ->update(['is_deleted_reciver' => date('Y-m-d H:i:s')]);
-        }
-        if ($msg->sender_id == $myId) {
-            DB::table('messages')
-                ->where('id', $id)
-                ->update(['is_deleted_sender' => date('Y-m-d H:i:s')]);
-        }
-
-        $_SESSION['flash_message'] = '삭제되었습니다.';
-        $_SESSION['flash_type'] = 'success';
-        return $response->withHeader('Location', $basePath."/memo")->withStatus(302);
-    });
+    $group->post('/delete', [$memoController, 'delete']);
     
-});
+})->add($memoCheckMiddleware);
 
 $app->group('/emoticon', function ($group) use ($blade, $basePath) {
     $group->get('', function (Request $request, Response $response) use ($blade) {
@@ -256,72 +149,11 @@ $app->group('/emoticon', function ($group) use ($blade, $basePath) {
         return $response;
     });
 });
+
 //댓글 처리부
-$app->post('/comment/delete', function (Request $request, Response $response) {
-    $data = $request->getParsedBody();
-    $cmtId = $data['comment_id'];
-    $docId = $data['doc_id'];
+$app->post('/comment/delete', [$commentController, 'delete']);
 
-    $check = DB::table(table: 'comments')->where('id',  $cmtId)->first();
-    if (!$check) {
-        $_SESSION['flash_message'] = '처리중 오류가 발생했습니다.';
-        $_SESSION['flash_type'] = 'error';
-        return $response->withHeader('Location', $_SERVER['HTTP_REFERER'] ?? $this->basePath . '/')->withStatus(302);
-    }
-    $myId = $_SESSION['user_idx'] ?? 0;
-    $myLevel = $_SESSION['level'] ?? 0;
-
-    if ($check->user_id != $myId && $myLevel < 10) {
-        $_SESSION['flash_message'] = '수정 권한이 없습니다.';
-        $_SESSION['flash_type'] = 'error';
-        return $response->withHeader('Location', $_SERVER['HTTP_REFERER'] ?? $this->basePath . '/')->withStatus(302);
-    }
-    
-    DB::table('comments')
-    ->where('id', $cmtId)
-    ->update([
-        'is_deleted' => 1,
-        'deleted_at' => date('Y-m-d H:i:s')
-    ]);
-    DB::table('documents')->where('id', $docId)->decrement('comment_count');
-
-    return $response->withHeader('Location', $_SERVER['HTTP_REFERER'] ?? $this->basePath . '/')->withStatus(302);
-});
-
-$app->post('/comment/update', function (Request $request, Response $response) {
-    $data = $request->getParsedBody();
-    $cmtId = $data['comment_id'];
-    $content = trim($data['content']);
-
-    $comment = DB::table('comments')->find($cmtId);
-    if (!$comment) {
-        $_SESSION['flash_message'] = '존재하지 않는 댓글입니다.';
-        $_SESSION['flash_type'] = 'error';
-        return $response->withHeader('Location', $_SERVER['HTTP_REFERER'] ?? $this->basePath . '/')->withStatus(302);
-    }
-
-    $myId = $_SESSION['user_idx'] ?? 0;
-    $myLevel = $_SESSION['level'] ?? 0;
-
-    if ($comment->user_id != $myId && $myLevel < 10) {
-        $_SESSION['flash_message'] = '수정 권한이 없습니다.';
-        $_SESSION['flash_type'] = 'error';
-        return $response->withHeader('Location', $_SERVER['HTTP_REFERER'] ?? $this->basePath . '/')->withStatus(302);
-    }
-
-    $content = \App\Support\Hook::filter('before_comment_save', ['content' => $content]);
-    $content = cleanHtml($content['content']);
-
-    DB::table('comments')
-        ->where('id', $cmtId)
-        ->update([
-            'content' => $content
-        ]);
-
-    $after =  \App\Support\Hook::filter('after_comment_save', $cmtId);
-
-    return $response->withHeader('Location', $_SERVER['HTTP_REFERER'] ?? $this->basePath . '/')->withStatus(302);
-});
+$app->post('/comment/update', [$commentController, 'update']);
 
 // 대표 캐릭터 변경
 $app->post('/character/set-main', function (Request $request, Response $response) use ($app) {
@@ -348,6 +180,11 @@ $app->post('/character/set-main', function (Request $request, Response $response
 $app->any('/plugin/{plugin_name}/{action}', [$pluginDispatcherController, 'dispatch']);
 
 //긴주소
+
+$app->get('/au/{group_slug}/shop/{shop_id:[0-9]+}', [$shopController, 'shopView']);
+
+$app->post('/au/{group_slug}/shop/{shop_id:[0-9]+}/purchase', [$shopController, 'shopPurchase']);
+
 $app->get('/au/{group_slug}/{menu_slug}/{id:[0-9]+}/edit', [$boardController, 'getEdit'])->add($secretCheckMiddleware);
 
 $app->post('/au/{group_slug}/{menu_slug}/store', [$characterController, 'store'])->add($secretCheckMiddleware);
@@ -355,6 +192,8 @@ $app->post('/au/{group_slug}/{menu_slug}/store', [$characterController, 'store']
 $app->post('/au/{group_slug}/{menu_slug}/item/{inv_id:[0-9]+}/use', [$shopController, 'itemUse']);
 
 $app->post('/au/{group_slug}/{menu_slug}/item/{inv_id:[0-9]+}/sell', [$shopController, 'itemSell']);
+
+$app->post('/au/{group_slug}/{menu_slug}/item/{inv_id:[0-9]+}/gift', [$shopController, 'itemGift']);
 
 $app->post('/au/{group_slug}/{menu_slug}/{id:[0-9]+}/update', [$characterController, 'update']);
 
@@ -370,7 +209,7 @@ $app->post('/au/{group_slug}/{menu_slug}/{id:[0-9]+}/edit', [$boardController, '
 
 $app->post('/au/{group_slug}/{menu_slug}/{id:[0-9]+}/delete', [$boardController, 'bdelete'])->setArgument('is_short', false);
 
-$app->post('/au/{group_slug}/{menu_slug}/{id:[0-9]+}/comment', [$boardController, 'comment'])->setArgument('is_short', false)->add($secretCheckMiddleware);
+$app->post('/au/{group_slug}/{menu_slug}/{id:[0-9]+}/comment', [$commentController, 'comment'])->setArgument('is_short', false)->add($secretCheckMiddleware);
 
 $app->post('/au/{group_slug}/{menu_slug}/write', [$boardController, 'write']);
 
@@ -381,6 +220,11 @@ $app->get('/au/{group_slug}/{menu_slug}[/]', [$boardController, 'index'])->add($
 $app->get('/au/{group_slug}/{menu_slug}/{action}[/]', [$boardController, 'index'])->add($secretCheckMiddleware);
 
 //짧은주소
+
+$app->get('/shop/{shop_id:[0-9]+}', [$shopController, 'shopView']);
+
+$app->post('/shop/{shop_id:[0-9]+}/purchase', [$shopController, 'shopPurchase']);
+
 $app->post('/{menu_slug}/write', [$boardController, 'write']);
 
 $app->post('/{menu_slug}/store', [$characterController, 'store'])->add($secretCheckMiddleware);
@@ -389,13 +233,15 @@ $app->post('/{menu_slug}/item/{inv_id:[0-9]+}/use', [$shopController, 'itemUse']
 
 $app->post('/{menu_slug}/item/{inv_id:[0-9]+}/sell', [$shopController, 'itemSell']);
 
+$app->post('/{menu_slug}/item/{inv_id:[0-9]+}/gift', [$shopController, 'itemGift']);
+
 $app->get('/{menu_slug}/{id:[0-9]+}/edit', [$boardController, 'getEdit'])->add($secretCheckMiddleware);
 
 $app->post('/{menu_slug}/{id:[0-9]+}/edit', [$boardController, 'edit'])->setArgument('is_short', true);
 
 $app->post('/{menu_slug}/{id:[0-9]+}/delete', [$boardController, 'bdelete'])->setArgument('is_short', true);
 
-$app->post('/{menu_slug}/{id:[0-9]+}/comment', [$boardController, 'comment'])->setArgument('is_short', false)->add($secretCheckMiddleware);
+$app->post('/{menu_slug}/{id:[0-9]+}/comment', [$commentController, 'comment'])->setArgument('is_short', false)->add($secretCheckMiddleware);
 
 $app->post('/{menu_slug}/{id:[0-9]+}/update', [$characterController, 'update']);
 

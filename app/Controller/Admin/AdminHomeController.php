@@ -24,6 +24,7 @@ class AdminHomeController {
         $docs = DB::table('documents')
             ->join('menus', function($join) {
                 $join->on('documents.board_id', '=', 'menus.target_id')
+                    ->on('documents.group_id', '=', 'menus.group_id')
                     ->whereIn('menus.type', array('board', 'load'));
             })
             ->where('documents.is_deleted', 0)
@@ -70,7 +71,6 @@ class AdminHomeController {
         $users = DB::table('users')
             ->where('is_deleted', 0)
             ->orderBy('created_at', 'desc')
-            ->limit(5)
             ->get();
 
         $groups = DB::table('groups')
@@ -98,6 +98,20 @@ class AdminHomeController {
             ->where('is_deleted', 0)
             ->update([
                 'is_secret' => $isSecret,
+            ]);
+
+        $_SESSION['flash_message'] = '변경되었습니다.';
+        $_SESSION['flash_type'] = 'success';
+        return $response->withHeader('Location', $this->basePath . '/admin')->withStatus(302);
+    }
+
+    public function ismemouse(Request $request, Response $response) {
+        $data = $request->getParsedBody();
+        $isMemoUse = (int) $data['is_memo_use'];
+        DB::table('groups')
+            ->where('is_deleted', 0)
+            ->update([
+                'is_memo_use' => $isMemoUse,
             ]);
 
         $_SESSION['flash_message'] = '변경되었습니다.';

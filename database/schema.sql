@@ -96,6 +96,7 @@ CREATE TABLE `__PREFIX__groups` (
   `is_deleted` tinyint(1) DEFAULT 0,
   `deleted_at` timestamp NULL DEFAULT NULL,
   `is_secret` tinyint(1) DEFAULT 0,
+  `is_memo_use` tinyint(1) DEFAULT 1,
   PRIMARY KEY (`id`),
   UNIQUE KEY `slug` (`slug`)
 ) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -219,6 +220,8 @@ CREATE TABLE `__PREFIX__items` (
     `effect_type` ENUM('none', 'lottery', 'create_item', 'random_box') NOT NULL DEFAULT 'none',
     `effect_data` longtext NULL,
     `is_sellable` TINYINT(1) NOT NULL DEFAULT 0,
+    `is_binding` TINYINT(1) NOT NULL DEFAULT 0,
+    `is_permanent` TINYINT(1) NOT NULL DEFAULT 0,
     `sell_price` INT NOT NULL DEFAULT 0,
     `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `is_deleted` TINYINT(1) NOT NULL DEFAULT 0,
@@ -230,7 +233,8 @@ CREATE TABLE `__PREFIX__character_items` (
     `character_id` int(11) UNSIGNED NOT NULL,
     `item_id` int(11) UNSIGNED NOT NULL,
     `quantity` INT UNSIGNED NOT NULL DEFAULT 1,
-    `options` longtext NULL, 
+    `options` longtext NULL,
+    `comment` VARCHAR(255) NULL, 
     `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `is_deleted` TINYINT(1) NOT NULL DEFAULT 0,
     `deleted_at` timestamp NULL,
@@ -249,4 +253,42 @@ CREATE TABLE `__PREFIX__settlement_logs` (
     `reason` TEXT NOT NULL,
     `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
     INDEX `idx_group_admin` (`group_id`, `admin_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `__PREFIX__shops` (
+    `id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    `group_id` INT(11) UNSIGNED NOT NULL,
+    `name` VARCHAR(100) NOT NULL,
+    `npc_image_path` VARCHAR(2048) NULL,
+    `npc_name` VARCHAR(100) NOT NULL,
+    `description` TEXT NULL,
+    `is_open` TINYINT(1) NOT NULL DEFAULT 1,
+    `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+    `is_deleted` TINYINT(1) NOT NULL DEFAULT 0,
+    `deleted_at` timestamp NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `__PREFIX__shop_items` (
+    `id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    `shop_id` INT(11) UNSIGNED NOT NULL,
+    `item_id` INT(11) UNSIGNED NOT NULL,
+    `price` INT NOT NULL DEFAULT 0,
+    `purchase_limit` INT NOT NULL DEFAULT 0,
+    `display_order` INT NOT NULL DEFAULT 0,
+    
+    FOREIGN KEY (`shop_id`) REFERENCES `__PREFIX__shops` (`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`item_id`) REFERENCES `__PREFIX__items` (`id`) ON DELETE CASCADE,
+    INDEX `idx_shop_display` (`shop_id`, `display_order`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `__PREFIX__shop_purchase_logs` (
+    `id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    `shop_item_id` INT(11) UNSIGNED NOT NULL,
+    `user_id` INT(11) UNSIGNED NOT NULL,
+    `character_id` INT(11) UNSIGNED NOT NULL,
+    `quantity` INT NOT NULL DEFAULT 1,
+    `price_at_purchase` INT NOT NULL,
+    `purchased_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    
+    INDEX `idx_user_item` (`user_id`, `shop_item_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

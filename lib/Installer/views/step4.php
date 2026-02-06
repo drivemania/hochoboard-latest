@@ -19,17 +19,17 @@ include __DIR__ . '/header.php';
 
     <div>
         <label class="block text-xs font-bold text-gray-600 mb-1">관리자 ID</label>
-        <input type="text" name="admin_id" class="w-full border border-gray-300 rounded p-2 focus:outline-none focus:border-indigo-500" required>
+        <input type="text" name="admin_id" class="w-full border border-gray-300 rounded p-2 focus:outline-none focus:border-amber-500" required>
     </div>
 
     <div class="grid grid-cols-2 gap-4">
         <div>
             <label class="block text-xs font-bold text-gray-600 mb-1">비밀번호</label>
-            <input type="password" name="admin_pw" class="w-full border border-gray-300 rounded p-2 focus:outline-none focus:border-indigo-500" required>
+            <input type="password" name="admin_pw" class="w-full border border-gray-300 rounded p-2 focus:outline-none focus:border-amber-500" required>
         </div>
         <div>
              <label class="block text-xs font-bold text-gray-600 mb-1">닉네임</label>
-            <input type="text" name="admin_nick" value="관리자" class="w-full border border-gray-300 rounded p-2 focus:outline-none focus:border-indigo-500" required>
+            <input type="text" name="admin_nick" value="관리자" class="w-full border border-gray-300 rounded p-2 focus:outline-none focus:border-amber-500" required>
         </div>
     </div>
 
@@ -39,18 +39,18 @@ include __DIR__ . '/header.php';
         <div class="grid grid-cols-2 gap-4">
             <div>
                 <label class="block text-xs font-bold text-gray-600 mb-1">커뮤니티 이름</label>
-                <input type="text" name="group_name" value="" placeholder="OO아파트, 무협 커뮤니티 XXX" class="w-full border border-gray-300 rounded p-2 focus:outline-none focus:border-indigo-500" required>
+                <input type="text" name="group_name" value="" placeholder="OO아파트, 무협 커뮤니티 XXX" class="w-full border border-gray-300 rounded p-2 focus:outline-none focus:border-amber-500" required>
             </div>
             <div>
                 <label class="block text-xs font-bold text-gray-600 mb-1">주소 ID (Slug)</label>
-                <input type="text" name="group_slug" value="main" pattern="[a-z0-9\-]+" title="영문 소문자, 숫자, 하이픈(-)만 가능합니다." class="w-full border border-gray-300 rounded p-2 focus:outline-none focus:border-indigo-500 bg-gray-50" required>
+                <input type="text" name="group_slug" value="main" pattern="[a-z0-9\-]+" title="영문 소문자, 숫자, 하이픈(-)만 가능합니다." class="w-full border border-gray-300 rounded p-2 focus:outline-none focus:border-amber-500 bg-gray-50" required>
                 <p class="text-xs text-gray-400 mt-1">URL에 사용됩니다. (예: /main)</p>
             </div>
         </div>
     </div>
 
     <div class="pt-6">
-        <button type="submit" id="install_btn" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold text-lg shadow-lg transition transform hover:-translate-y-0.5">
+        <button type="submit" id="install_btn" class="w-full py-3 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-bold text-lg shadow-lg transition transform hover:-translate-y-0.5">
             설치 시작하기
         </button>
     </div>

@@ -12,17 +12,17 @@
             
             <div class="grid grid-cols-1 gap-4">
                 <div>
-                    <label class="block text-sm font-bold mb-2 text-gray-700">아이디</label>
-                    <input type="text" value="{{ $user->user_id }}" class="w-full border rounded px-3 py-2 bg-gray-100 text-gray-500" readonly>
+                    <label class="block text-sm font-bold mb-2 text-neutral-700">아이디</label>
+                    <input type="text" value="{{ $user->user_id }}" class="w-full border rounded px-3 py-2 bg-neutral-100 text-neutral-500" readonly>
                 </div>
 
                 <div>
-                    <label class="block text-sm font-bold mb-2 text-gray-700">닉네임</label>
+                    <label class="block text-sm font-bold mb-2 text-neutral-700">닉네임</label>
                     <input type="text" name="nickname" value="{{ $user->nickname }}" class="w-full border rounded px-3 py-2" required>
                 </div>
 
                 <div>
-                    <label class="block text-sm font-bold mb-2 text-gray-700">이메일</label>
+                    <label class="block text-sm font-bold mb-2 text-neutral-700">이메일</label>
                     <input type="email" name="email" value="{{ $user->email }}" class="w-full border rounded px-3 py-2">
                 </div>
             </div>
@@ -33,7 +33,7 @@
             
             <div class="grid grid-cols-1 gap-4">
                 <div>
-                    <label class="block text-sm font-bold mb-2 text-gray-700">회원 등급 (Level)</label>
+                    <label class="block text-sm font-bold mb-2 text-neutral-700">회원 등급 (Level)</label>
                     <select name="level" class="w-full border rounded px-3 py-2 bg-white">
                         <option value="1" {{ $user->level == 1 ? 'selected' : '' }}>1</option>
                         <option value="2" {{ $user->level == 2 ? 'selected' : '' }}>2</option>
@@ -49,9 +49,9 @@
                 </div>
 
                 <div>
-                    <label class="block text-sm font-bold mb-2 text-gray-700">비밀번호 변경</label>
+                    <label class="block text-sm font-bold mb-2 text-neutral-700">비밀번호 변경</label>
                     <input type="password" name="password" class="w-full border rounded px-3 py-2" placeholder="변경할 경우에만 입력하세요">
-                    <p class="text-xs text-gray-500 mt-1">※ 입력하지 않으면 기존 비밀번호가 유지됩니다.</p>
+                    <p class="text-xs text-neutral-500 mt-1">※ 입력하지 않으면 기존 비밀번호가 유지됩니다.</p>
                 </div>
             </div>
         </div>
@@ -62,8 +62,8 @@
             </button>
 
             <div class="space-x-2">
-                <a href="{{ $base_path }}/admin/users" class="px-4 py-2 border rounded text-gray-600 hover:bg-gray-50">취소</a>
-                <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded font-bold hover:bg-blue-700">저장하기</button>
+                <a href="{{ $base_path }}/admin/users" class="px-4 py-2 border rounded text-neutral-600 hover:bg-neutral-50">취소</a>
+                <button type="submit" class="bg-amber-500 text-white px-6 py-2 rounded font-bold hover:bg-amber-700">저장하기</button>
             </div>
         </div>
     </form>

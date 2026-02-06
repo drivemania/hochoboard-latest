@@ -14,7 +14,7 @@
             <label class="block text-sm font-bold mb-2">게시판 종류</label>
             <div class="flex space-x-6">
                 <label class="flex items-center cursor-pointer">
-                    <input type="radio" name="type" value="document" class="w-4 h-4 text-blue-600" 
+                    <input type="radio" name="type" value="document" class="w-4 h-4 text-amber-500" 
                         {{ ($board->type ?? 'document') == 'document' ? 'checked' : '' }} disabled>
                     <span class="ml-2">일반 게시판</span>
                 </label>
@@ -46,18 +46,18 @@
         <h3 class="text-lg font-bold border-b pb-2 mb-4">페이지 설정</h3>
         <div class="flex justify-end mb-2">
             <button type="button" id="toggle-source-btn" 
-                    class="px-4 py-2 text-sm font-bold text-white bg-indigo-600 rounded hover:bg-indigo-700 transition">
+                    class="px-4 py-2 text-sm font-bold text-white bg-amber-500 rounded hover:bg-amber-700 transition">
                 &lt;/&gt; HTML 소스 편집
             </button>
         </div>
         <div class="mb-4">
-            <textarea id="editor" rows="3" class="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none">{{ $board->notice }}</textarea>
+            <textarea id="editor" rows="3" class="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-amber-400 outline-none">{{ $board->notice }}</textarea>
             <textarea name="notice" id="source-textarea">{{ $board->notice }}</textarea>
-            <p class="text-xs text-gray-500 mt-1">페이지에 표시될 내용을 작성해주세요.</p>
+            <p class="text-xs text-neutral-500 mt-1">페이지에 표시될 내용을 작성해주세요.</p>
         </div>
     </div>
     <div class="text-center">
-        <button type="submit" class="bg-blue-600 text-white px-8 py-3 rounded-lg font-bold hover:bg-blue-700 shadow-lg">
+        <button type="submit" class="bg-amber-500 text-white px-8 py-3 rounded-lg font-bold hover:bg-amber-700 shadow-lg">
             설정 저장하기
         </button>
     </div>
@@ -171,8 +171,8 @@ document.addEventListener("DOMContentLoaded", function() {
                 editor.ui.view.element.style.display = 'none';
                 sourceTextarea.style.display = 'block';
                 toggleBtn.innerText = "👁️ 위지윅 에디터로 보기";
-                toggleBtn.classList.replace('bg-indigo-600', 'bg-gray-600');
-                toggleBtn.classList.replace('hover:bg-indigo-700', 'hover:bg-gray-700');
+                toggleBtn.classList.replace('bg-amber-500', 'bg-neutral-600');
+                toggleBtn.classList.replace('hover:bg-amber-700', 'hover:bg-neutral-700');
             }
         })
         .catch(error => {
@@ -200,8 +200,8 @@ document.addEventListener("DOMContentLoaded", function() {
             editorElement.style.display = 'block';
             
             toggleBtn.innerText = "</> HTML 소스 편집";
-            toggleBtn.classList.replace('bg-gray-600', 'bg-indigo-600');
-            toggleBtn.classList.replace('hover:bg-gray-700', 'hover:bg-indigo-700');
+            toggleBtn.classList.replace('bg-neutral-600', 'bg-amber-500');
+            toggleBtn.classList.replace('hover:bg-neutral-700', 'hover:bg-amber-700');
             
             isSourceMode = false;
         } else {
@@ -212,8 +212,8 @@ document.addEventListener("DOMContentLoaded", function() {
             sourceTextarea.style.display = 'block';
 
             toggleBtn.innerText = "👁️ 위지윅 에디터로 보기";
-            toggleBtn.classList.replace('bg-indigo-600', 'bg-gray-600');
-            toggleBtn.classList.replace('hover:bg-indigo-700', 'hover:bg-gray-700');
+            toggleBtn.classList.replace('bg-amber-500', 'bg-neutral-600');
+            toggleBtn.classList.replace('hover:bg-amber-700', 'hover:bg-neutral-700');
 
             isSourceMode = true;
         }
@@ -239,7 +239,7 @@ document.addEventListener("DOMContentLoaded", function() {
             <label class="block text-sm font-bold mb-2">게시판 종류</label>
             <div class="flex space-x-6">
                 <label class="flex items-center cursor-pointer">
-                    <input type="radio" name="type" value="document" class="w-4 h-4 text-blue-600" 
+                    <input type="radio" name="type" value="document" class="w-4 h-4 text-amber-500" 
                         {{ ($board->type ?? 'document') == 'document' ? 'checked' : '' }} disabled>
                     <span class="ml-2">일반 게시판</span>
                 </label>
@@ -271,19 +271,19 @@ document.addEventListener("DOMContentLoaded", function() {
             </div>
         </div>
         @if($board->type === 'document')
-        <div class="mt-4 p-4 border rounded bg-gray-50">
+        <div class="mt-4 p-4 border rounded bg-neutral-50">
             <label class="flex items-center cursor-pointer">
-                <input type="checkbox" name="use_editor" value="1" class="w-5 h-5 text-blue-600 rounded" 
+                <input type="checkbox" name="use_editor" value="1" class="w-5 h-5 text-amber-500 rounded" 
                     {{ $board->use_editor ? 'checked' : '' }}>
-                <span class="ml-2 font-bold text-gray-700">📝 위지윅 에디터 사용</span>
+                <span class="ml-2 font-bold text-neutral-700">📝 위지윅 에디터 사용</span>
             </label>
-            <p class="text-xs text-gray-500 mt-1 ml-7">체크하면 글쓰기 시 CKEditor 5가 적용됩니다. (스킨에 따라 지원하지 않을 수도 있어요.)</p>
+            <p class="text-xs text-neutral-500 mt-1 ml-7">체크하면 글쓰기 시 CKEditor 5가 적용됩니다. (스킨에 따라 지원하지 않을 수도 있어요.)</p>
         </div>
-        <div class="mt-4 p-4 border rounded bg-gray-50">
+        <div class="mt-4 p-4 border rounded bg-neutral-50">
             <label class="flex items-center cursor-pointer">
-                <input type="checkbox" name="use_secret" value="1" class="w-5 h-5 text-blue-600 rounded" 
+                <input type="checkbox" name="use_secret" value="1" class="w-5 h-5 text-amber-500 rounded" 
                     {{ $board->use_secret ? 'checked' : '' }}>
-                <span class="ml-2 font-bold text-gray-700">🔒 비밀글 사용</span>
+                <span class="ml-2 font-bold text-neutral-700">🔒 비밀글 사용</span>
             </label>
         </div>
         @endif
@@ -293,16 +293,16 @@ document.addEventListener("DOMContentLoaded", function() {
         <h3 class="text-lg font-bold border-b pb-2 mb-4">🔒 권한 설정</h3>
         <div class="grid grid-cols-3 gap-4 text-center">
             <div>
-                <label class="block text-sm font-bold mb-2 text-gray-600">목록 읽기 권한</label>
+                <label class="block text-sm font-bold mb-2 text-neutral-600">목록 읽기 권한</label>
                 <input type="number" name="read_level" value="{{ $board->read_level }}" class="w-20 border rounded px-2 py-1 text-center mx-auto">
-                <div class="text-xs text-gray-400 mt-1">0:손님, 1:회원, 10:관리자</div>
+                <div class="text-xs text-neutral-400 mt-1">0:손님, 1:회원, 10:관리자</div>
             </div>
             <div>
-                <label class="block text-sm font-bold mb-2 text-gray-600">글 쓰기 권한</label>
+                <label class="block text-sm font-bold mb-2 text-neutral-600">글 쓰기 권한</label>
                 <input type="number" name="write_level" value="{{ $board->write_level }}" class="w-20 border rounded px-2 py-1 text-center mx-auto">
             </div>
             <div>
-                <label class="block text-sm font-bold mb-2 text-gray-600">댓글 쓰기 권한</label>
+                <label class="block text-sm font-bold mb-2 text-neutral-600">댓글 쓰기 권한</label>
                 <input type="number" name="comment_level" value="{{ $board->comment_level }}" class="w-20 border rounded px-2 py-1 text-center mx-auto">
             </div>
             </div>
@@ -312,15 +312,15 @@ document.addEventListener("DOMContentLoaded", function() {
         <h3 class="text-lg font-bold border-b pb-2 mb-4">상단 공지 설정</h3>
         <div class="flex justify-end mb-2">
             <button type="button" id="toggle-source-btn" 
-                    class="px-4 py-2 text-sm font-bold text-white bg-indigo-600 rounded hover:bg-indigo-700 transition">
+                    class="px-4 py-2 text-sm font-bold text-white bg-amber-500 rounded hover:bg-amber-700 transition">
                 &lt;/&gt; HTML 소스 편집
             </button>
         </div>
 
         <div class="mb-4">
-            <textarea id="editor" rows="3" class="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none">{{ $board->notice }}</textarea>
+            <textarea id="editor" rows="3" class="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-amber-400 outline-none">{{ $board->notice }}</textarea>
             <textarea name="notice" id="source-textarea">{{ $board->notice }}</textarea>
-            <p class="text-xs text-gray-500 mt-1">게시판 상단에 표시될 공지를 작성해주세요.</p>
+            <p class="text-xs text-neutral-500 mt-1">게시판 상단에 표시될 공지를 작성해주세요.</p>
         </div>
     </div>
     @endif
@@ -333,7 +333,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 @foreach($boardSkins as $skin)
                 <div @click="selectedSkin = '{{ $skin['id'] }}'" 
                     class="cursor-pointer border-2 rounded-lg overflow-hidden relative"
-                    :class="selectedSkin == '{{ $skin['id'] }}' ? 'border-blue-500 ring-2' : 'border-gray-200'">
+                    :class="selectedSkin == '{{ $skin['id'] }}' ? 'border-amber-400 ring-2' : 'border-neutral-200'">
 
                     <div class="p-2 text-center text-sm font-bold">{{ $skin['name'] }}</div>
                 </div>
@@ -345,7 +345,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 @foreach($charSkins as $skin)
                 <div @click="selectedSkin = '{{ $skin['id'] }}'" 
                     class="cursor-pointer border-2 rounded-lg overflow-hidden relative"
-                    :class="selectedSkin == '{{ $skin['id'] }}' ? 'border-blue-500 ring-2' : 'border-gray-200'">
+                    :class="selectedSkin == '{{ $skin['id'] }}' ? 'border-amber-400 ring-2' : 'border-neutral-200'">
 
                     <div class="p-2 text-center text-sm font-bold">{{ $skin['name'] }}</div>
                 </div>
@@ -357,7 +357,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 @foreach($loadSkins as $skin)
                 <div @click="selectedSkin = '{{ $skin['id'] }}'" 
                     class="cursor-pointer border-2 rounded-lg overflow-hidden relative"
-                    :class="selectedSkin == '{{ $skin['id'] }}' ? 'border-blue-500 ring-2' : 'border-gray-200'">
+                    :class="selectedSkin == '{{ $skin['id'] }}' ? 'border-amber-400 ring-2' : 'border-neutral-200'">
 
                     <div class="p-2 text-center text-sm font-bold">{{ $skin['name'] }}</div>
                 </div>
@@ -367,10 +367,10 @@ document.addEventListener("DOMContentLoaded", function() {
         
     </div>
     @if($board->type === 'document')
-    <div class="bg-white p-6 rounded-lg shadow-sm mb-6 border border-gray-200">
+    <div class="bg-white p-6 rounded-lg shadow-sm mb-6 border border-neutral-200">
         <h3 class="text-lg font-bold border-b pb-2 mb-4 flex justify-between items-center">
             <span>🛠 사용자 정의 필드 (확장 필드)</span>
-            <span class="text-xs font-normal text-gray-500">텍스트, 선택박스 등을 자유롭게 추가하세요.</span>
+            <span class="text-xs font-normal text-neutral-500">텍스트, 선택박스 등을 자유롭게 추가하세요.</span>
         </h3>
 
         <div x-data="{ 
@@ -387,15 +387,15 @@ document.addEventListener("DOMContentLoaded", function() {
             
             <div class="space-y-3">
                 <template x-for="(field, index) in fields" :key="index">
-                    <div class="flex flex-wrap items-start gap-2 p-3 bg-gray-50 rounded border">
+                    <div class="flex flex-wrap items-start gap-2 p-3 bg-neutral-50 rounded border">
                         
                         <div class="flex-1">
-                            <label class="block text-xs text-gray-500 mb-1">필드 이름 (예: 연락처)</label>
+                            <label class="block text-xs text-neutral-500 mb-1">필드 이름 (예: 연락처)</label>
                             <input type="text" :name="`custom_fields[${index}][name]`" x-model="field.name" class="w-full border rounded px-2 py-1 text-sm" placeholder="필드명" required>
                         </div>
 
                         <div class="w-32">
-                            <label class="block text-xs text-gray-500 mb-1">입력 타입</label>
+                            <label class="block text-xs text-neutral-500 mb-1">입력 타입</label>
                             <select :name="`custom_fields[${index}][type]`" x-model="field.type" class="w-full border rounded px-2 py-1 text-sm bg-white">
                                 <option value="text">한줄 입력 (Text)</option>
                                 <option value="textarea">여러줄 입력 (Textarea)</option>
@@ -406,14 +406,14 @@ document.addEventListener("DOMContentLoaded", function() {
                         </div>
 
                         <div class="flex-1" x-show="field.type === 'select' || field.type === 'checkbox'">
-                            <label class="block text-xs text-gray-500 mb-1">선택 옵션 (콤마 , 로 구분)</label>
+                            <label class="block text-xs text-neutral-500 mb-1">선택 옵션 (콤마 , 로 구분)</label>
                             <input type="text" :name="`custom_fields[${index}][options]`" x-model="field.options" class="w-full border rounded px-2 py-1 text-sm" placeholder="예: 사과,배,포도">
                         </div>
 
                         <div class="w-16 text-center pt-5">
                             <label class="inline-flex items-center cursor-pointer">
-                                <input type="checkbox" :name="`custom_fields[${index}][required]`" x-model="field.required" value="1" class="w-4 h-4 text-blue-600 rounded">
-                                <span class="ml-1 text-xs text-gray-600">필수</span>
+                                <input type="checkbox" :name="`custom_fields[${index}][required]`" x-model="field.required" value="1" class="w-4 h-4 text-amber-500 rounded">
+                                <span class="ml-1 text-xs text-neutral-600">필수</span>
                             </label>
                         </div>
 
@@ -425,12 +425,12 @@ document.addEventListener("DOMContentLoaded", function() {
             </div>
 
             <div class="mt-4">
-                <button type="button" @click="addField()" class="w-full py-2 border-2 border-dashed border-gray-300 rounded text-gray-500 hover:border-blue-500 hover:text-blue-600 font-bold transition">
+                <button type="button" @click="addField()" class="w-full py-2 border-2 border-dashed border-neutral-300 rounded text-neutral-500 hover:border-amber-400 hover:text-amber-500 font-bold transition">
                     + 필드 추가하기
                 </button>
             </div>
 
-            <p class="text-xs text-gray-400 mt-2">
+            <p class="text-xs text-neutral-400 mt-2">
                 ※ '선택 옵션'은 타입이 '선택 박스'나 '체크 박스'일 때만 입력하면 됩니다.<br>
                 ※ 순서대로 출력됩니다.
             </p>
@@ -439,7 +439,7 @@ document.addEventListener("DOMContentLoaded", function() {
     @endif
 
     <div class="text-center">
-        <button type="submit" class="bg-blue-600 text-white px-8 py-3 rounded-lg font-bold hover:bg-blue-700 shadow-lg">
+        <button type="submit" class="bg-amber-500 text-white px-8 py-3 rounded-lg font-bold hover:bg-amber-700 shadow-lg">
             설정 저장하기
         </button>
     </div>
@@ -553,8 +553,8 @@ document.addEventListener("DOMContentLoaded", function() {
                 editor.ui.view.element.style.display = 'none';
                 sourceTextarea.style.display = 'block';
                 toggleBtn.innerText = "👁️ 위지윅 에디터로 보기";
-                toggleBtn.classList.replace('bg-indigo-600', 'bg-gray-600');
-                toggleBtn.classList.replace('hover:bg-indigo-700', 'hover:bg-gray-700');
+                toggleBtn.classList.replace('bg-amber-500', 'bg-neutral-600');
+                toggleBtn.classList.replace('hover:bg-amber-700', 'hover:bg-neutral-700');
             }
         })
         .catch(error => {
@@ -582,8 +582,8 @@ document.addEventListener("DOMContentLoaded", function() {
             editorElement.style.display = 'block';
             
             toggleBtn.innerText = "</> HTML 소스 편집";
-            toggleBtn.classList.replace('bg-gray-600', 'bg-indigo-600');
-            toggleBtn.classList.replace('hover:bg-gray-700', 'hover:bg-indigo-700');
+            toggleBtn.classList.replace('bg-neutral-600', 'bg-amber-500');
+            toggleBtn.classList.replace('hover:bg-neutral-700', 'hover:bg-amber-700');
             
             isSourceMode = false;
         } else {
@@ -594,8 +594,8 @@ document.addEventListener("DOMContentLoaded", function() {
             sourceTextarea.style.display = 'block';
 
             toggleBtn.innerText = "👁️ 위지윅 에디터로 보기";
-            toggleBtn.classList.replace('bg-indigo-600', 'bg-gray-600');
-            toggleBtn.classList.replace('hover:bg-indigo-700', 'hover:bg-gray-700');
+            toggleBtn.classList.replace('bg-amber-500', 'bg-neutral-600');
+            toggleBtn.classList.replace('hover:bg-amber-700', 'hover:bg-neutral-700');
 
             isSourceMode = true;
         }

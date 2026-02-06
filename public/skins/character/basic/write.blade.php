@@ -1,11 +1,6 @@
 @extends($themeLayout)
 
 @section('content')
-
-@push('styles')
-<script src="https://cdn.tailwindcss.com"></script>
-@endpush
-
 @php
 $cancelUrl = $_SERVER['HTTP_REFERER'];
 if($character){
@@ -22,52 +17,52 @@ if($character){
     <form action="{{ $actionUrl }}" method="POST" enctype="multipart/form-data">
         
         <div class="mb-4">
-            <label class="block text-sm font-bold text-gray-700 mb-1">캐릭터 이름</label>
+            <label class="block text-sm font-bold text-neutral-700 mb-1">캐릭터 이름</label>
             <input type="text" name="name" value="{{ $character->name ?? '' }}" class="w-full border rounded px-3 py-2" required placeholder="">
         </div>
 
         <div class="mb-4">
-            <label class="block text-sm font-bold text-gray-700 mb-1">한마디</label>
+            <label class="block text-sm font-bold text-neutral-700 mb-1">한마디</label>
             <input type="text" name="description" value="{{ $character->description ?? '' }}" class="w-full border rounded px-3 py-2" placeholder="">
         </div>
         
         <div class="mb-4">
             <label class="flex items-center cursor-pointer">
-                <input type="checkbox" name="is_main" value="1" class="w-4 h-4 text-blue-600 rounded" {{ ($character->is_main ?? false) ? 'checked' : '' }}>
-                <span class="ml-2 text-sm text-gray-700 font-bold">대표 캐릭터로 설정</span>
+                <input type="checkbox" name="is_main" value="1" class="w-4 h-4 text-amber-600 rounded" {{ ($character->is_main ?? false) ? 'checked' : '' }}>
+                <span class="ml-2 text-sm text-neutral-700 font-bold">대표 캐릭터로 설정</span>
             </label>
         </div>
 
         <div class="mb-4">
-            <label class="block text-sm font-bold text-gray-700 mb-1">두상 이미지</label>
+            <label class="block text-sm font-bold text-neutral-700 mb-1">두상 이미지</label>
             <input type="file" name="image_path" class="w-full border rounded px-3 py-2 bg-white">
-            <div class="text-center text-xs text-gray-400 font-bold">- OR -</div>
+            <div class="text-center text-xs text-neutral-400 font-bold">- OR -</div>
             <input type="text" name="image_path" value="{{ $character->image_path ?? '' }}" 
-                class="w-full border rounded px-3 py-2 text-sm bg-gray-50" 
+                class="w-full border rounded px-3 py-2 text-sm bg-neutral-50" 
                 placeholder="https:// 외부 이미지 주소를 입력하세요 (파일 업로드 시 무시됨)">
             @if($character && $character->image_path)
-                <div class="mt-1 text-xs text-blue-600">
+                <div class="mt-1 text-xs text-amber-600">
                     현재 파일: <a href="{{ $character->image_path }}" target="_blank" class="underline">{{ basename($character->image_path) }}</a>
                 </div>
             @endif
         </div>
 
         <div class="mb-4">
-            <label class="block text-sm font-bold text-gray-700 mb-1">전신 이미지</label>
+            <label class="block text-sm font-bold text-neutral-700 mb-1">전신 이미지</label>
             <input type="file" name="image_path2" class="w-full border rounded px-3 py-2 bg-white">
-            <div class="text-center text-xs text-gray-400 font-bold">- OR -</div>
+            <div class="text-center text-xs text-neutral-400 font-bold">- OR -</div>
             <input type="text" name="image_path2" value="{{ $character->image_path2 ?? '' }}" 
-                class="w-full border rounded px-3 py-2 text-sm bg-gray-50" 
+                class="w-full border rounded px-3 py-2 text-sm bg-neutral-50" 
                 placeholder="https:// 외부 이미지 주소를 입력하세요 (파일 업로드 시 무시됨)">
             @if($character && $character->image_path2)
-                <div class="mt-1 text-xs text-blue-600">
+                <div class="mt-1 text-xs text-amber-600">
                     현재 파일: <a href="{{ $character->image_path2 }}" target="_blank" class="underline">{{ basename($character->image_path2) }}</a>
                 </div>
             @endif
         </div>
 
     @if($group->use_fixed_char_fields)
-        <div class="mb-6 bg-gray-50 p-4 rounded border">
+        <div class="mb-6 bg-neutral-50 p-4 rounded border">
             @php
                 $fixedFields = $group->char_fixed_fields ? json_decode($group->char_fixed_fields, true) : [];
                 
@@ -88,7 +83,7 @@ if($character){
                 @endphp
                 
                 <div class="mb-4">
-                    <label class="block text-sm font-bold text-gray-700 mb-1">
+                    <label class="block text-sm font-bold text-neutral-700 mb-1">
                         {{ $field['name'] }}
                         @if($field['required']) <span class="text-red-500">*</span> @endif
                     </label>
@@ -119,9 +114,9 @@ if($character){
             stats: {{ $mode === 'edit' && !empty($profile) ? str_replace('"', "'", json_encode($profile, JSON_UNESCAPED_UNICODE)) : "[{key: '', value: ''}]" }},
             addStat() { this.stats.push({key: '', value: ''}); },
             removeStat(index) { this.stats.splice(index, 1); }
-        }" class="mb-6 bg-gray-50 p-4 rounded border">
+        }" class="mb-6 bg-neutral-50 p-4 rounded border">
             
-            <label class="block text-sm font-bold text-gray-700 mb-2">상세 정보 (자유 설정)</label>
+            <label class="block text-sm font-bold text-neutral-700 mb-2">상세 정보 (자유 설정)</label>
             <template x-for="(stat, index) in stats" :key="index">
                 <div class="flex space-x-2 mb-2">
                     <input type="text" :name="`profile[${index}][key]`" x-model="stat.key" class="w-1/3 border rounded px-2 py-1 text-sm" placeholder="항목">
@@ -129,13 +124,13 @@ if($character){
                     <button type="button" @click="removeStat(index)" class="text-red-500 hover:text-red-700 px-2">×</button>
                 </div>
             </template>
-            <button type="button" @click="addStat()" class="mt-2 text-sm text-blue-600 hover:underline font-bold">+ 항목 추가하기</button>
+            <button type="button" @click="addStat()" class="mt-2 text-sm text-amber-600 hover:underline font-bold">+ 항목 추가하기</button>
         </div>
     @endif
 
         <div class="flex justify-end space-x-2 border-t pt-4">
-            <a href="" class="px-4 py-2 border rounded text-gray-600 hover:bg-gray-50">취소</a>
-            <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded font-bold hover:bg-blue-700">
+            <a href="" class="px-4 py-2 border rounded text-neutral-600 hover:bg-neutral-50">취소</a>
+            <button type="submit" class="bg-amber-600 text-white px-6 py-2 rounded font-bold hover:bg-amber-700">
                 {{ $mode === 'edit' ? '수정완료' : '생성완료' }}
             </button>
         </div>

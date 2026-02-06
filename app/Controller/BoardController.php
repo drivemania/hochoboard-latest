@@ -83,7 +83,7 @@ class BoardController extends Model
             return $response;
         }
         
-        if (in_array($menuSlug, ['admin', 'login', 'logout', 'register', 'au', 'comment', 'page', 'memo', 'plugin'])) {
+        if (in_array($menuSlug, ['admin', 'login', 'logout', 'register', 'au', 'comment', 'page', 'memo', 'plugin', 'shop'])) {
             $_SESSION['flash_message'] = "페이지를 찾을 수 없습니다.";
             $_SESSION['flash_type'] = 'error';
             return $response->withHeader('Location', $this->basePath . '/')->withStatus(302);
@@ -115,6 +115,11 @@ class BoardController extends Model
             $_SESSION['flash_message'] = "페이지를 찾을 수 없습니다.";
             $_SESSION['flash_type'] = 'error';
             return $response->withHeader('Location', $this->basePath . '/')->withStatus(302);
+        }
+
+        //만약 접속한 사람이 회원이 아니거나 0레벨인 경우 비밀글 사용 불가
+        if(!isset($_SESSION['user_idx']) || $_SESSION['user_idx'] < 1){
+            $board->use_secret = 0;
         }
 
         $currentUrl = $this->basePath . '/au/' . $group->slug . '/' . $menu->slug;
@@ -336,6 +341,7 @@ class BoardController extends Model
                     }
                 }
 
+
                 $parser = new \ContentParser($this->basePath); 
                 $board->notice = $parser->parse($board->notice);
         
@@ -444,12 +450,15 @@ class BoardController extends Model
                     ->select([
                         'character_items.id as inventory_id',
                         'character_items.quantity',
+                        'character_items.comment',
                         'items.id as item_id',
                         'items.name',
                         'items.description',
                         'items.icon_path',
                         'items.effect_type',
                         'items.is_sellable',
+                        'items.is_permanent',
+                        'items.is_binding',
                         'items.sell_price'
                     ])
                     ->get();
@@ -458,6 +467,13 @@ class BoardController extends Model
                         ->where('group_id', $character->group_id)
                         ->where('is_deleted', 0)
                         ->whereNotIn('id', $targetIds)
+                        ->orderBy('name', 'asc')
+                        ->get();
+
+                    $giftCharacters = DB::table('characters')
+                        ->where('group_id', $character->group_id)
+                        ->where('is_deleted', 0)
+                        ->where('id', "!=", $character->id)
                         ->orderBy('name', 'asc')
                         ->get();
                     
@@ -483,6 +499,7 @@ class BoardController extends Model
                         'profile' => $character->profile_data ? json_decode($character->profile_data, associative: true) : [],
                         'relations' => $finalRelations,
                         'otherCharacters' => $otherCharacters,
+                        'giftCharacters' => $giftCharacters,
                         'currentUrl' => $currentUrl
                     ]);
                     $response->getBody()->write($content);
@@ -808,26 +825,29 @@ class BoardController extends Model
         }
 
         if (!$group) {
-            $_SESSION['flash_message'] = "페이지를 찾을 수 없습니다. 1";
+            $_SESSION['flash_message'] = "페이지를 찾을 수 없습니다.";
             $_SESSION['flash_type'] = 'error';
             return $response->withHeader('Location', $this->basePath . '/')->withStatus(302);
         };
 
         $menu = DB::table('menus')->where('group_id', $group->id)->where('slug', $menuSlug)->first();
         if (!$menu || !in_array($menu->type, array('board', 'load'))) {
-            $_SESSION['flash_message'] = "페이지를 찾을 수 없습니다. 2";
+            $_SESSION['flash_message'] = "페이지를 찾을 수 없습니다.";
             $_SESSION['flash_type'] = 'error';
             return $response->withHeader('Location', $this->basePath . '/')->withStatus(302);
         };
 
         $board = DB::table('boards')->find($menu->target_id);
         if (!$board) {
-                $_SESSION['flash_message'] = "페이지를 찾을 수 없습니다. 3";
-                $_SESSION['flash_type'] = 'error';
-                return $response->withHeader('Location', $this->basePath . '/')->withStatus(302);
-            };
+            $_SESSION['flash_message'] = "페이지를 찾을 수 없습니다.";
+            $_SESSION['flash_type'] = 'error';
+            return $response->withHeader('Location', $this->basePath . '/')->withStatus(302);
+        };
 
-        
+        //만약 접속한 사람이 회원이 아니거나 0레벨인 경우 비밀글 사용 불가
+        if(!isset($_SESSION['user_idx']) || $_SESSION['user_idx'] < 1){
+            $board->use_secret = 0;
+        }
 
         if( $board->type == "load" ) {
             $result = $this->saveLoadPost($request, $board, $menu);
@@ -920,49 +940,6 @@ class BoardController extends Model
         }else{
             $this->returnUrl = $this->basePath . '/au/' . $args['group_slug'] . '/' . $args['menu_slug'];
         }
-    
-        return $response->withHeader('Location', $this->returnUrl)->withStatus(302);
-    }
-
-    public function comment(Request $request, Response $response, $args) 
-    {
-        $docNum = $args['id'];
-        $isShort = $args['is_short'] ?? false;
-        $menuSlug = $args['menu_slug'];
-        $data = $request->getParsedBody();
-        
-        $menu = DB::table('menus')->where('slug', $menuSlug)->where('is_deleted', 0)->first();
-        $doc = DB::table('documents')->where('board_id', $menu->target_id)->where('doc_num', $docNum)->first();
-        $board = DB::table('boards')->where('id', $doc->board_id)->where('is_deleted', 0)->first();
-        $docId = $doc->id;
-
-        if (($_SESSION['level'] ?? 0) < $board->comment_level) {
-            $_SESSION['flash_message'] = '댓글 권한이 없습니다.';
-            $_SESSION['flash_type'] = 'error';
-            return $response->withHeader('Location', $_SERVER['HTTP_REFERER'] ?? $this->basePath . '/')->withStatus(302);
-        }
-
-        $data = \App\Support\Hook::filter('before_comment_save', $data);
-    
-        $cmtId = DB::table('comments')->insertGetId([
-            'board_id' => $doc->board_id,
-            'doc_id' => $docId,
-            'user_id' => $_SESSION['user_idx'] ?? 0,
-            'nickname' => $_SESSION['nickname'] ?? '손님',
-            'content' => trim(cleanHtml($data['content'])),
-            'ip_address' => $_SERVER['REMOTE_ADDR'],
-            'created_at' => date('Y-m-d H:i:s')
-        ]);
-
-        $after = \App\Support\Hook::filter('after_comment_save', $cmtId);
-
-        if($isShort){
-            $this->returnUrl = $_SERVER['HTTP_REFERER']."#comment_$cmtId" ?? $this->basePath . '/';
-        }else{
-            $this->returnUrl = $_SERVER['HTTP_REFERER']."#comment_$cmtId" ?? $this->basePath . '/'; //혹시모르니까
-        }
-    
-        DB::table('documents')->where('id', $docId)->increment('comment_count');
     
         return $response->withHeader('Location', $this->returnUrl)->withStatus(302);
     }
@@ -1072,6 +1049,11 @@ class BoardController extends Model
                 $_SESSION['flash_message'] = '수정 권한이 없습니다.';
                 $_SESSION['flash_type'] = 'error';
                 return $response->withHeader('Location', $_SERVER['HTTP_REFERER'] ?? $this->basePath . '/')->withStatus(302);
+            }
+
+            //만약 접속한 사람이 회원이 아니거나 0레벨인 경우 비밀글 사용 불가
+            if(!isset($_SESSION['user_idx']) || $_SESSION['user_idx'] < 1){
+                $board->use_secret = 0;
             }
 
             $themeLayout = ($group->theme ?? 'basic') . ".layout";
@@ -1302,16 +1284,37 @@ class BoardController extends Model
             ]);
     
             if ($reply != "") {
-                $reply = cleanHtml($reply);
-                DB::table('comments')->insert([
+                $reply2 = \App\Support\Hook::filter('before_comment_save', ['content' => $reply]);
+                $reply = trim(cleanHtml($reply2['content']));
+
+                $summonArr = [];
+
+                if (preg_match_all('/\[\[(.*?)\]\]/', $reply, $matches)) {
+                    foreach ($matches[1] as $value) {
+                        if(!in_array($value, $summonArr)) $summonArr[] = $value;
+                    }
+                }
+
+                $cmtId = DB::table('comments')->insertGetId([
                     'board_id' => $board->id,
                     'doc_id' => $docId,
                     'user_id' => $userId,
                     'nickname' => $nickname,
-                    'content' => trim($reply),
+                    'content' => $reply,
                     'ip_address' => $ip,
                     'created_at' => date('Y-m-d H:i:s')
                 ]);
+                $after =  \App\Support\Hook::filter('after_comment_save', $cmtId);
+
+                foreach ($summonArr as $value) {
+                    $summon = DB::table('users')->where('nickname', trim($value))->where('is_deleted', 0)->first();
+                    if($summon){
+                        $summmonMsg = $reply;
+                        $summonUrl = $this->returnUrl;
+        
+                        $this->setNotification($menu->group_id, $summon->id, $_SESSION['user_idx'], $summmonMsg, $summonUrl);
+                    }
+                }
             }
         
             DB::table('board_sequences')
@@ -1322,6 +1325,23 @@ class BoardController extends Model
     
         return ['success' => true];
     
+    }
+
+    private function setNotification($groupId, $receiverId, $senderId, $message, $url) {
+        $message = preg_replace('/\r\n|\r|\n/', '', $message);
+        if( mb_strlen($message) > 255 ){
+            $message = mb_substr($message, 0, 252) . '...';
+        }
+        DB::table('notifications')->insert([
+            'group_id' => $groupId,
+            'user_id' => $receiverId,
+            'sender_id' => $senderId,
+            'type' => 'document',
+            'message' => $message,
+            'url' => $url,
+            'is_viewed' => 0,
+            'created_at' => date('Y-m-d H:i:s')
+        ]);
     }
 
     private function getPluginId($target, $id){
